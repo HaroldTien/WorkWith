@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WorkWith</title>
+    <style>
+        /* 
+        🌌 GRADIENT THEMES - Choose One:
+        
+        1. DEEP SPACE (Currently Active) - Professional & Modern
+           Background: #111827, Text: #E5E7EB
+           Buttons: linear-gradient(135deg, #4338CA, #6D28D9)
+        
+        2. CYBER GLOW - Energetic & Gaming
+           Background: #0F172A, Text: #F8FAFC
+           Buttons: linear-gradient(135deg, #22D3EE, #A78BFA)
+        
+        3. SUBTLE AURORA - Minimal & Elegant
+           Background: linear-gradient(180deg, #111827, #1E1B4B)
+           UI Elements: #2A2A38, Accent: #38BDF8
+        */
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: #111827;
+            color: #E5E7EB;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding-top: 36px; /* space for fixed title bar */
+        }
+        
+        /* Draggable header bar */
+        .titlebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 36px;
+            width: 100%;
+            background: rgba(17, 24, 39, 0.9);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 12px;
+            box-sizing: border-box;
+            -webkit-app-region: drag; /* Make the whole bar draggable */
+            user-select: none;
+            z-index: 1000;
+        }
+        .titlebar .controls { 
+            display: flex; 
+            gap: 0; 
+            -webkit-app-region: no-drag; /* Buttons must be clickable */
+        }
+        .titlebar .btn {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #6B7280; /* same color for all */
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 8px;
+            color: transparent;
+            cursor: pointer;
+            transition: transform .15s ease;
+            -webkit-app-region: no-drag; /* Ensure button itself is clickable */
+            pointer-events: auto;
+        }
+        .titlebar .btn:hover { transform: scale(1.1); }
+        /* Only keep the close button */
+        .titlebar .btn.close:hover { background:#EF4444; color:#111827; }
+        
+        .container {
+            text-align: center;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        h1 {
+            margin: 0 0 20px 0;
+            font-size: 2.5em;
+            font-weight: 300;
+        }
+        
+        p {
+            margin: 0 0 30px 0;
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+        
+        button {
+            background: linear-gradient(135deg, #4338CA, #6D28D9);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: all 0.3s ease;
+            margin: 5px;
+            box-shadow: 0 4px 15px rgba(67, 56, 202, 0.3);
+        }
+        
+        button:hover {
+            background: linear-gradient(135deg, #5B21B6, #7C3AED);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(67, 56, 202, 0.4);
+        }
+        
+                 /* Remove leftover demo styles */
+         
+         /* Main container for horizontal layout */
+         .main-container {
+             display: flex;
+             gap: 20px;
+             align-items: flex-start;
+             justify-content: center;
+             margin: 0 auto;
+             padding: 0 40px;
+             overflow-x: auto;
+             overflow-y: hidden;
+             max-width: 800px;
+             width: 70%;
+             height: 400px;
+         }
+
+         /* Scrollbar styling for main container */
+         .main-container::-webkit-scrollbar {
+             height: 8px;
+         }
+
+         .main-container::-webkit-scrollbar-track {
+             background: rgba(255, 255, 255, 0.05);
+             border-radius: 4px;
+         }
+
+         .main-container::-webkit-scrollbar-thumb {
+             background: rgba(255, 255, 255, 0.2);
+             border-radius: 4px;
+         }
+
+         .main-container::-webkit-scrollbar-thumb:hover {
+             background: rgba(255, 255, 255, 0.3);
+         }
+
+         /* Task board block - both creation and instances */
+         .task-board-block {
+             width: 200px;
+             height: 400px;
+             background: rgba(255, 255, 255, 0.05);
+             backdrop-filter: blur(10px);
+             border-radius: 20px;
+             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+             border: 1px solid rgba(255, 255, 255, 0.1);
+             display: flex;
+             flex-direction: column;
+             align-items: center;
+             justify-content: center;
+             flex-shrink: 0;
+             transition: all 0.3s ease;
+             cursor: pointer;
+             position: relative;
+         }
+
+         .task-board-block:hover {
+             transform: translateY(-4px);
+             box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+             border-color: rgba(255, 255, 255, 0.2);
+         }
+
+         /* Creation block specific styles */
+         .task-board-block.creation-block {
+             cursor: default;
+         }
+
+         .task-board-block.creation-block:hover {
+             transform: none;
+             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+             border-color: rgba(255, 255, 255, 0.1);
+         }
+         
+         /* Circular dotted button */
+         #taskBoardBtn {
+             width: 80px;
+             height: 80px;
+             border-radius: 50%;
+             background: transparent;
+             border: 2px dashed rgba(255, 255, 255, 0.4);
+             color: rgba(255, 255, 255, 0.6);
+             font-size: 24px;
+             font-weight: 300;
+             cursor: pointer;
+             transition: all 0.3s ease;
+             display: flex;
+             align-items: center;
+             justify-content: center;
+             padding: 0;
+             margin: 0;
+             box-shadow: none;
+         }
+         
+         #taskBoardBtn:hover {
+             border-color: rgba(255, 255, 255, 0.8);
+             color: rgba(255, 255, 255, 0.9);
+             background: rgba(255, 255, 255, 0.05);
+             transform: scale(1.1);
+             box-shadow: 0 4px 20px rgba(255, 255, 255, 0.1);
+         }
+
+         /* Task Board Instance Styles */
+         .task-board-instance {
+             padding: 20px;
+             text-align: center;
+             height: 100%;
+             display: flex;
+             flex-direction: column;
+             justify-content: space-between;
+         }
+
+         .board-header {
+             flex: 1;
+             display: flex;
+             flex-direction: column;
+             justify-content: center;
+             align-items: center;
+             gap: 16px;
+         }
+
+         .board-name {
+             color: #E5E7EB;
+             font-size: 18px;
+             font-weight: 600;
+             text-align: center;
+             word-wrap: break-word;
+             line-height: 1.3;
+             margin: 0;
+         }
+
+         .board-stats {
+             display: flex;
+             flex-direction: column;
+             gap: 8px;
+             align-items: center;
+         }
+
+         .task-count {
+             color: #10B981;
+             font-size: 14px;
+             font-weight: 500;
+         }
+
+         .last-accessed {
+             color: #9CA3AF;
+             font-size: 12px;
+         }
+
+         /* Three-dot menu styles */
+         .board-menu-btn {
+             position: absolute;
+             top: 12px;
+             right: 12px;
+             width: 24px;
+             height: 24px;
+             background: rgba(255, 255, 255, 0.05);
+             border: 1px solid rgba(255, 255, 255, 0.1);
+             border-radius: 4px;
+             display: flex;
+             align-items: center;
+             justify-content: center;
+             cursor: pointer;
+             transition: all 0.2s ease;
+             color: #9CA3AF;
+             z-index: 10;
+             opacity: 0;
+         }
+
+         .task-board-block:hover .board-menu-btn {
+             opacity: 1;
+         }
+
+         .board-menu-btn:hover {
+             background: rgba(255, 255, 255, 0.1);
+             border-color: rgba(255, 255, 255, 0.2);
+             color: #E5E7EB;
+         }
+
+         .board-menu-btn.active {
+             background: rgba(67, 56, 202, 0.2);
+             border-color: rgba(67, 56, 202, 0.3);
+             color: #4338CA;
+             opacity: 1;
+         }
+
+         /* Dropdown menu styles */
+         .board-dropdown-menu {
+             position: absolute;
+             top: 40px;
+             right: 12px;
+             background: rgba(31, 41, 55, 0.95);
+             backdrop-filter: blur(10px);
+             border: 1px solid rgba(255, 255, 255, 0.15);
+             border-radius: 8px;
+             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+             min-width: 140px;
+             z-index: 20;
+             overflow: hidden;
+         }
+
+         .dropdown-item {
+             display: flex;
+             align-items: center;
+             gap: 8px;
+             padding: 10px 12px;
+             color: #E5E7EB;
+             font-size: 13px;
+             cursor: pointer;
+             transition: all 0.15s ease;
+             border: none;
+             background: none;
+             width: 100%;
+             text-align: left;
+         }
+
+         .dropdown-item:hover {
+             background: rgba(255, 255, 255, 0.08);
+             color: #F9FAFB;
+         }
+
+         .dropdown-item.delete-board-item:hover {
+             background: rgba(239, 68, 68, 0.15);
+             color: #FCA5A5;
+         }
+
+         .dropdown-item svg {
+             width: 14px;
+             height: 14px;
+             flex-shrink: 0;
+         }
+
+         .dropdown-divider {
+             height: 1px;
+             background: rgba(255, 255, 255, 0.1);
+             margin: 4px 0;
+         }
+
+         /* Ensure dropdown doesn't interfere with block hover */
+         .board-dropdown-menu:hover {
+             display: block !important;
+         }
+    </style>
+  <script type="module" crossorigin src="./assets/main-_R_DCiH6.js"></script>
+</head>
+<body>
+    <div class="titlebar">
+        <div class="title" style="padding-left:4px; opacity:.9;">WorkWith</div>
+        <div class="controls">
+            <div id="closeBtn" class="btn close">×</div>
+        </div>
+    </div>
+
+    <div class="main-container" id="mainContainer">
+        <div class="task-board-block creation-block">
+            <button id="taskBoardBtn">+</button>
+        </div>
+        <!-- Task board instances will be rendered here dynamically -->
+    </div>
+
+    <script>
+        // Wire up custom window controls
+        window.addEventListener('DOMContentLoaded', () => {
+            const api = window.electronAPI;
+            const closeBtn = document.getElementById('closeBtn');
+
+            if (closeBtn) {
+                closeBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    if (api && api.windowControls && typeof api.windowControls.close === 'function') {
+                        api.windowControls.close();
+                    } else {
+                        console.warn('electronAPI not available, using window.close() fallback');
+                        window.close();
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>
