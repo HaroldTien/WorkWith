@@ -112,6 +112,13 @@ export class TaskCard {
             });
         }
 
+        // Task title double-click event for editing
+        const taskTitle = taskCard.querySelector('.task-title');
+        taskTitle.addEventListener('dblclick', (e) => {
+            e.stopPropagation();
+            this.showEditTitleInput();
+        });
+
         // Add subtask button event
         const addSubtaskBtn = taskCard.querySelector('.add-subtask-btn');
         addSubtaskBtn.addEventListener('click', (e) => {
@@ -162,6 +169,115 @@ export class TaskCard {
     // Get the DOM element
     getElement() {
         return this.element;
+    }
+
+    showEditTitleInput() {
+        // Check if input is already shown
+        const existingInput = this.element.querySelector('.title-edit-input-container');
+        if (existingInput) {
+            existingInput.remove();
+        }
+
+        // Get the current task title element
+        const taskTitle = this.element.querySelector('.task-title');
+        const currentTitle = taskTitle.textContent;
+
+        // Create input container
+        const inputContainer = document.createElement('div');
+        inputContainer.className = 'title-edit-input-container';
+        
+        // Create input field
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.className = 'title-edit-input';
+        input.value = currentTitle;
+        input.placeholder = 'Enter task title...';
+        input.maxLength = 200;
+
+        // Create buttons container
+        const buttonsContainer = document.createElement('div');
+        buttonsContainer.className = 'title-edit-input-buttons';
+
+        // Create save button
+        const saveBtn = document.createElement('button');
+        saveBtn.className = 'title-edit-save-btn';
+        saveBtn.textContent = '✓';
+        saveBtn.title = 'Save title';
+
+        // Create cancel button
+        const cancelBtn = document.createElement('button');
+        cancelBtn.className = 'title-edit-cancel-btn';
+        cancelBtn.textContent = '✕';
+        cancelBtn.title = 'Cancel';
+
+        // Add buttons to container
+        buttonsContainer.appendChild(saveBtn);
+        buttonsContainer.appendChild(cancelBtn);
+
+        // Add input and buttons to container
+        inputContainer.appendChild(input);
+        inputContainer.appendChild(buttonsContainer);
+
+        // Replace the task title with the input
+        taskTitle.style.display = 'none';
+        taskTitle.parentNode.insertBefore(inputContainer, taskTitle);
+
+        // Focus the input and select all text
+        input.focus();
+        input.select();
+
+        // Handle save
+        const handleSave = () => {
+            const newTitle = input.value.trim();
+            if (newTitle && newTitle !== currentTitle) {
+                this.task.title = newTitle;
+                this.updateTaskAndNotify();
+            }
+            this.hideEditTitleInput();
+        };
+
+        // Handle cancel
+        const handleCancel = () => {
+            this.hideEditTitleInput();
+        };
+
+        // Event listeners
+        saveBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            handleSave();
+        });
+
+        cancelBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            handleCancel();
+        });
+
+        input.addEventListener('keydown', (e) => {
+            e.stopPropagation();
+            if (e.key === 'Enter') {
+                handleSave();
+            } else if (e.key === 'Escape') {
+                handleCancel();
+            }
+        });
+
+        // Prevent event bubbling to avoid closing when clicking inside
+        inputContainer.addEventListener('click', (e) => {
+            e.stopPropagation();
+        });
+    }
+
+    hideEditTitleInput() {
+        const inputContainer = this.element.querySelector('.title-edit-input-container');
+        if (inputContainer) {
+            inputContainer.remove();
+        }
+        
+        // Show the task title again
+        const taskTitle = this.element.querySelector('.task-title');
+        if (taskTitle) {
+            taskTitle.style.display = 'block';
+        }
     }
 
     showAddSubtaskInput() {

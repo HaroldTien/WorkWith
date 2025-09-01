@@ -55,7 +55,7 @@
         }
         .titlebar .controls { 
             display: flex; 
-            gap: 0; 
+            gap: 8px; 
             -webkit-app-region: no-drag; /* Buttons must be clickable */
         }
         .titlebar .btn {
@@ -75,6 +75,19 @@
         .titlebar .btn.close { background: #6B7280; }
         .titlebar .btn.close:hover { background:#ff5f57; }
         .titlebar .btn.close:active { background:#ff3b30; }
+        
+        /* Settings button styling */
+        .titlebar .btn.settings { 
+            background: #6B7280; 
+            color: #E5E7EB;
+        }
+        .titlebar .btn.settings:hover { 
+            background: #9CA3AF; 
+            color: #FFFFFF;
+        }
+        .titlebar .btn.settings:active { 
+            background: #6B7280; 
+        }
         
         .container {
             text-align: center;
@@ -121,6 +134,7 @@
          
          /* Main container for horizontal layout */
          .main-container {
+             position: relative;
              display: flex;
              gap: 20px;
              align-items: flex-start;
@@ -253,10 +267,47 @@
              align-items: center;
          }
 
-         .task-count {
+         .task-counts {
+             display: flex;
+             gap: 12px;
+             align-items: center;
+             justify-content: center;
+         }
+
+         .count {
+             display: flex;
+             flex-direction: column;
+             align-items: center;
+             gap: 2px;
+             padding: 6px 8px;
+             border-radius: 6px;
+             font-size: 12px;
+             font-weight: 600;
+             min-width: 24px;
+             transition: all 0.2s ease;
+         }
+
+         .count.in-process {
+             background: rgba(59, 130, 246, 0.15);
+             color: #60A5FA;
+             border: 1px solid rgba(59, 130, 246, 0.3);
+         }
+
+         .count.today {
+             background: rgba(245, 158, 11, 0.15);
+             color: #FBBF24;
+             border: 1px solid rgba(245, 158, 11, 0.3);
+         }
+
+         .count.done {
+             background: rgba(16, 185, 129, 0.15);
              color: #10B981;
-             font-size: 14px;
-             font-weight: 500;
+             border: 1px solid rgba(16, 185, 129, 0.3);
+         }
+
+         .count:hover {
+             transform: scale(1.05);
+             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
          }
 
          .last-accessed {
@@ -357,17 +408,78 @@
          .board-dropdown-menu:hover {
              display: block !important;
          }
+         
+         /* Settings button positioned at absolute top right of window */
+         .settings-button {
+             position: fixed;
+             top: 50px;
+             right: 20px;
+             width: 40px;
+             height: 40px;
+             background: rgba(255, 255, 255, 0.1);
+             border: 1px solid rgba(255, 255, 255, 0.2);
+             border-radius: 50%;
+             display: flex;
+             align-items: center;
+             justify-content: center;
+             cursor: pointer;
+             transition: all 0.3s ease;
+             z-index: 100;
+             color: #E5E7EB;
+         }
+         
+         .settings-button:hover {
+             background: rgba(255, 255, 255, 0.2);
+             border-color: rgba(255, 255, 255, 0.4);
+             transform: scale(1.1);
+             color: #FFFFFF;
+         }
+         
+         .settings-button:active {
+             transform: scale(0.95);
+         }
+
+         /* Light Theme Support for Task Counts */
+         body.light-theme .count.in-process {
+             background: rgba(59, 130, 246, 0.1);
+             color: #2563eb;
+             border: 1px solid rgba(59, 130, 246, 0.2);
+         }
+
+         body.light-theme .count.today {
+             background: rgba(245, 158, 11, 0.1);
+             color: #d97706;
+             border: 1px solid rgba(245, 158, 11, 0.2);
+         }
+
+         body.light-theme .count.done {
+             background: rgba(16, 185, 129, 0.1);
+             color: #059669;
+             border: 1px solid rgba(16, 185, 129, 0.2);
+         }
+
+         body.light-theme .count:hover {
+             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+         }
     </style>
 </head>
 <body>
     <div class="titlebar">
         <div class="title" style="padding-left:4px; opacity:.9;">WorkWith</div>
         <div class="controls">
-            <div id="closeBtn" class="btn close" aria-label="Close"></div>
+            <div id="closeBtn" class="btn close" aria-label="Close" title="Close"></div>
         </div>
     </div>
 
     <div class="main-container" id="mainContainer">
+        <!-- Settings button positioned in top right of main content -->
+        <div id="settingsBtn" class="settings-button" aria-label="Settings" title="Settings">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="3"></circle>
+                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+            </svg>
+        </div>
+        
         <div class="task-board-block creation-block">
             <button id="taskBoardBtn">+</button>
         </div>
@@ -379,6 +491,7 @@
         window.addEventListener('DOMContentLoaded', () => {
             const api = window.electronAPI;
             const closeBtn = document.getElementById('closeBtn');
+            const settingsBtn = document.getElementById('settingsBtn');
 
             if (closeBtn) {
                 closeBtn.addEventListener('click', (e) => {
@@ -391,6 +504,22 @@
                     }
                 });
             }
+
+                    if (settingsBtn) {
+            settingsBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                // Import and show settings modal
+                import('./src/components/settings.js').then(module => {
+                    const { SettingsModal } = module;
+                    if (!window.settingsModal) {
+                        window.settingsModal = new SettingsModal();
+                    }
+                    window.settingsModal.show();
+                }).catch(error => {
+                    console.error('Failed to load settings:', error);
+                });
+            });
+        }
         });
     </script>
          <script type="module" src="/src/home.js"></script>

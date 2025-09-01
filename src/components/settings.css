@@ -1,0 +1,282 @@
+/* Settings Modal Styles */
+
+.settings-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(8px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 2000;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.settings-overlay.show {
+    opacity: 1;
+}
+
+.settings-modal {
+    background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+    border-radius: 16px;
+    box-shadow: 0 25px 70px rgba(0, 0, 0, 0.6);
+    width: 90%;
+    max-width: 600px;
+    max-height: 80vh;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    overflow: hidden;
+    transform: scale(0.9) translateY(20px);
+    transition: all 0.3s ease;
+}
+
+.settings-overlay.show .settings-modal {
+    transform: scale(1) translateY(0);
+}
+
+.settings-header {
+    padding: 24px 32px 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.settings-title {
+    color: #ffffff;
+    font-size: 24px;
+    font-weight: 600;
+    margin: 0;
+}
+
+.settings-close-btn {
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    color: #EF4444;
+    padding: 8px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.settings-close-btn:hover {
+    background: rgba(239, 68, 68, 0.2);
+    border-color: rgba(239, 68, 68, 0.5);
+    transform: scale(1.05);
+}
+
+.settings-content {
+    padding: 32px;
+    max-height: calc(80vh - 120px);
+    overflow-y: auto;
+}
+
+.settings-section {
+    margin-bottom: 32px;
+}
+
+.settings-section:last-child {
+    margin-bottom: 0;
+}
+
+.settings-section-title {
+    color: #E5E7EB;
+    font-size: 18px;
+    font-weight: 600;
+    margin: 0 0 16px 0;
+    padding-bottom: 8px;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+}
+
+.settings-option {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.settings-option:last-child {
+    border-bottom: none;
+}
+
+.settings-option-label {
+    color: #E5E7EB;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.settings-option-description {
+    color: #9CA3AF;
+    font-size: 12px;
+    margin-top: 4px;
+    line-height: 1.4;
+}
+
+.settings-option-control {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+/* Toggle Switch */
+.toggle-switch {
+    position: relative;
+    width: 48px;
+    height: 24px;
+    background: rgba(107, 114, 128, 0.5);
+    border-radius: 12px;
+    cursor: pointer;
+    transition: background 0.3s ease;
+}
+
+.toggle-switch.active {
+    background: rgba(59, 130, 246, 0.8);
+}
+
+.toggle-switch::after {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 20px;
+    height: 20px;
+    background: #ffffff;
+    border-radius: 50%;
+    transition: transform 0.3s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.toggle-switch.active::after {
+    transform: translateX(24px);
+}
+
+/* Select Dropdown */
+.settings-select {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 6px;
+    color: #E5E7EB;
+    padding: 8px 12px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    min-width: 120px;
+}
+
+.settings-select:focus {
+    outline: none;
+    border-color: #3B82F6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.settings-select option {
+    background: #1e293b;
+    color: #E5E7EB;
+}
+
+/* Input Fields */
+.settings-input {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 6px;
+    color: #E5E7EB;
+    padding: 8px 12px;
+    font-size: 14px;
+    transition: all 0.2s ease;
+    min-width: 120px;
+}
+
+.settings-input:focus {
+    outline: none;
+    border-color: #3B82F6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.settings-input::placeholder {
+    color: #9CA3AF;
+}
+
+/* Button Styles */
+.settings-btn {
+    background: rgba(59, 130, 246, 0.9);
+    border: 1px solid rgba(59, 130, 246, 0.9);
+    color: #ffffff;
+    padding: 10px 20px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.settings-btn:hover {
+    background: rgba(59, 130, 246, 1);
+    transform: translateY(-1px);
+}
+
+.settings-btn.secondary {
+    background: rgba(107, 114, 128, 0.2);
+    border-color: rgba(107, 114, 128, 0.4);
+    color: #D1D5DB;
+}
+
+.settings-btn.secondary:hover {
+    background: rgba(107, 114, 128, 0.3);
+    border-color: rgba(107, 114, 128, 0.6);
+}
+
+/* Settings Actions */
+.settings-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+    margin-top: 32px;
+    padding-top: 24px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Scrollbar Styling */
+.settings-content::-webkit-scrollbar {
+    width: 6px;
+}
+
+.settings-content::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 3px;
+}
+
+.settings-content::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 3px;
+}
+
+.settings-content::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .settings-modal {
+        width: 95%;
+        max-height: 90vh;
+    }
+    
+    .settings-header {
+        padding: 20px 24px 16px;
+    }
+    
+    .settings-content {
+        padding: 24px;
+    }
+    
+    .settings-title {
+        font-size: 20px;
+    }
+}

@@ -353,8 +353,10 @@ function renderTaskBoardsList() {
                 <div class="board-header">
                     <h3 class="board-name">${instance.name}</h3>
                     <div class="board-stats">
-                        <div class="task-count">
-                            ${Object.values(instance.taskBoard.tasks).flat().length} tasks
+                        <div class="task-counts">
+                            <span class="count in-process" title="In Process">${instance.taskBoard.tasks['in-process'].length}</span>
+                            <span class="count today" title="Today">${instance.taskBoard.tasks['today'].length}</span>
+                            <span class="count done" title="Done">${instance.taskBoard.tasks['done'].length}</span>
                         </div>
                         <div class="last-accessed">
                             ${formatDate(instance.lastAccessed)}
