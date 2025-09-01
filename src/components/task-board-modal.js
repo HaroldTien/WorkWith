@@ -57,21 +57,42 @@ export class TaskBoardModal {
 
 
     loadStyles() {
-        // Check if styles are already loaded
-        if (document.getElementById('task-board-modal-styles')) return;
-        
-        const link = document.createElement('link');
-        link.id = 'task-board-modal-styles';
-        link.rel = 'stylesheet';
-        link.type = 'text/css';
-        link.href = './src/components/TaskBoardModal.css';
-        
-        // Add error handling
-        link.onerror = () => {
-            console.error('Failed to load TaskBoardModal styles');
-        };
-        
-        document.head.appendChild(link);
+        // Ensure styles are injected once and work in both dev and production builds
+        // Use Vite's asset resolver so URLs are transformed in the bundle
+        if (!document.getElementById('task-board-modal-styles')) {
+            const link = document.createElement('link');
+            link.id = 'task-board-modal-styles';
+            link.rel = 'stylesheet';
+            link.type = 'text/css';
+            try {
+                link.href = new URL('./TaskBoardModal.css', import.meta.url).href;
+            } catch (e) {
+                console.error('Failed to resolve TaskBoardModal.css URL', e);
+            }
+
+            link.onerror = () => {
+                console.error('Failed to load TaskBoardModal styles');
+            };
+            document.head.appendChild(link);
+        }
+
+        // Also load TaskCard styles used inside the board
+        if (!document.getElementById('task-card-styles')) {
+            const linkCard = document.createElement('link');
+            linkCard.id = 'task-card-styles';
+            linkCard.rel = 'stylesheet';
+            linkCard.type = 'text/css';
+            try {
+                linkCard.href = new URL('./TaskCard.css', import.meta.url).href;
+            } catch (e) {
+                console.error('Failed to resolve TaskCard.css URL', e);
+            }
+
+            linkCard.onerror = () => {
+                console.error('Failed to load TaskCard styles');
+            };
+            document.head.appendChild(linkCard);
+        }
     }
 
 
