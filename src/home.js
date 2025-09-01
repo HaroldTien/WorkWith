@@ -502,6 +502,29 @@ function formatDate(dateString) {
 const taskBoardBtn = document.getElementById('taskBoardBtn');
 if (taskBoardBtn) taskBoardBtn.addEventListener('click', createNewTaskBoard);
 
+// Listen for task count updates from task board modals
+window.addEventListener('taskCountUpdated', (event) => {
+    const { boardName, taskCounts, tasks } = event.detail;
+    
+    // Find the corresponding board instance and update its task counts
+    const instance = taskBoardInstances.find(board => board.name === boardName);
+    if (instance) {
+        // Update the instance's tasks data
+        instance.taskBoard.tasks = tasks;
+        
+        // Update the last accessed time since there was activity
+        instance.lastAccessed = new Date().toISOString();
+        
+        // Re-render the task boards list to show updated counts
+        renderTaskBoardsList();
+        
+        // Save the updated data
+        saveAllTaskBoards();
+        
+        console.log(`🔄 Updated task counts for "${boardName}":`, taskCounts);
+    }
+});
+
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
     console.log('DOM loaded, WorkWith ready');

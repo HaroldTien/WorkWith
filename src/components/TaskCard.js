@@ -418,6 +418,22 @@ export class TaskCard {
         if (this.onUpdateTask) {
             this.onUpdateTask(this.task);
         }
+        
+        // Dispatch task count update event for home page
+        this.dispatchTaskUpdate();
+    }
+
+    dispatchTaskUpdate() {
+        // Create custom event to notify about task updates (subtasks changed)
+        const event = new CustomEvent('taskUpdated', {
+            detail: {
+                taskId: this.task.id,
+                task: this.task,
+                status: this.status
+            }
+        });
+        
+        window.dispatchEvent(event);
     }
 
     // Static method to create task card without instantiating class

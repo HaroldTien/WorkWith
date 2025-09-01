@@ -187,6 +187,9 @@ export class TaskBoardModal {
         // Save updated tasks to localStorage
         this.saveToLocalStorage();
         
+        // Dispatch event to notify home page about task count change
+        this.dispatchTaskCountUpdate();
+        
         // Show success message
         this.showSuccessMessage(`Task "${task.title}" deleted successfully!`);
     }
@@ -295,6 +298,9 @@ export class TaskBoardModal {
         
         // Save updated tasks to localStorage
         this.saveToLocalStorage();
+        
+        // Dispatch event to notify home page about task count change
+        this.dispatchTaskCountUpdate();
         
         // Show success message
         const statusNames = {
@@ -531,6 +537,9 @@ export class TaskBoardModal {
             this.renderTasks();
             this.saveToLocalStorage();
             
+            // Dispatch event to notify home page about task count change
+            this.dispatchTaskCountUpdate();
+            
             // Show success message
             this.showSuccessMessage(`Task "${title}" added successfully!`);
             
@@ -600,6 +609,24 @@ export class TaskBoardModal {
         } catch (error) {
             console.error('Failed to save task board to localStorage:', error);
         }
+    }
+
+    dispatchTaskCountUpdate() {
+        // Create custom event to notify home page about task count changes
+        const event = new CustomEvent('taskCountUpdated', {
+            detail: {
+                boardName: this.boardName,
+                taskCounts: {
+                    'in-process': this.tasks['in-process'].length,
+                    'today': this.tasks['today'].length,
+                    'done': this.tasks['done'].length
+                },
+                tasks: this.tasks
+            }
+        });
+        
+        window.dispatchEvent(event);
+        console.log('📊 Task count update event dispatched:', event.detail);
     }
 
     loadFromLocalStorage() {
