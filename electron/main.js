@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain } from 'electron';
+import { app, BrowserWindow, ipcMain, screen } from 'electron';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 
@@ -58,6 +58,40 @@ ipcMain.on('window-maximize', () => {
 ipcMain.on('window-close', () => {
     const win = BrowserWindow.getFocusedWindow();
     if (win) win.close();
+});
+
+// Focus Mode window sizing (10% width, 50% height) and restore
+let __focusOriginalBounds = null;
+
+ipcMain.on('focus-mode-resize', () => {
+    const win = BrowserWindow.getFocusedWindow();
+    if (!win) return;
+
+    if (!__focusOriginalBounds) {
+        __focusOriginalBounds = win.getBounds();
+    }
+
+    const { workArea } = screen.getPrimaryDisplay();
+    const focusWidth = Math.round(workArea.width * 0.10);
+    const focusHeight = Math.round(workArea.height * 0.50);
+    const focusX = Math.round(workArea.x + (workArea.width - focusWidth) / 2);
+    const focusY = workArea.y; // top aligned
+
+    win.setBounds({ x: focusX, y: focusY, width: focusWidth, height: focusHeight });
+    win.setResizable(false);
+    win.setMaximizable(false);
+    win.setFullScreenable(false);
+});
+
+ipcMain.on('focus-mode-restore', () => {
+    const win = BrowserWindow.getFocusedWindow();
+    if (!win || !__focusOriginalBounds) return;
+
+    win.setBounds(__focusOriginalBounds);
+    win.setResizable(true);
+    win.setMaximizable(true);
+    win.setFullScreenable(true);
+    __focusOriginalBounds = null;
 });
 
 // App event handlers

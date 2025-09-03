@@ -51,6 +51,10 @@ export class TaskCard {
     getHTML() {
         const completedSubtasks = this.task.subtasks.filter(subtask => subtask.completed).length;
         const totalSubtasks = this.task.subtasks.length;
+        const minutes = this.getEstimateMinutes();
+        const estimateHTML = minutes != null
+            ? `<button class="estimate-badge" type="button" aria-label="Estimated time" title="Edit estimate">${this.formatEstimate(minutes)}</button>`
+            : `<button class="estimate-placeholder" type="button" role="button" aria-label="Estimated time" title="Add estimate"></button>`;
         
         return `
             <div class="task-header">
@@ -67,7 +71,7 @@ export class TaskCard {
                     </button>
                 </div>
             </div>
-            ${this.task.estimateTime ? `<div class="task-estimate">⏱️ ${this.task.estimateTime}</div>` : ''}
+            <div class="task-estimate-row">${estimateHTML}</div>
             ${totalSubtasks > 0 ? `<div class="subtask-progress">${completedSubtasks}/${totalSubtasks} subtasks completed</div>` : ''}
             <div class="subtasks-container">
                 ${this.getSubtasksHTML()}
@@ -119,6 +123,21 @@ export class TaskCard {
             this.showEditTitleInput();
         });
 
+        // Estimate: placeholder/badge click to edit
+        const estTrigger = taskCard.querySelector('.estimate-placeholder, .estimate-badge');
+        if (estTrigger) {
+            estTrigger.addEventListener('click', (e) => {
+                e.stopPropagation();
+                this.showEstimateEditor();
+            });
+            estTrigger.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    this.showEstimateEditor();
+                }
+            });
+        }
+
         // Add subtask button event
         const addSubtaskBtn = taskCard.querySelector('.add-subtask-btn');
         addSubtaskBtn.addEventListener('click', (e) => {
@@ -169,6 +188,174 @@ export class TaskCard {
     // Get the DOM element
     getElement() {
         return this.element;
+    }
+
+    // --- Estimate helpers ---
+    getEstimateMinutes() {
+        if (typeof this.task.estimateMinutes === 'number') return this.task.estimateMinutes;
+        // Back-compat: parse legacy estimateTime like "02:30"
+        if (this.task.estimateTime) {
+            const parsed = this.parseEstimate(this.task.estimateTime);
+            if (parsed.valid) return parsed.minutes;
+        }
+        return null;
+    }
+
+    formatEstimate(minutes) {
+        const m = Math.max(0, parseInt(minutes, 10) || 0);
+        const h = Math.floor(m / 60);
+        const rem = m % 60;
+        if (h > 0 && rem > 0) return `Est: ${h}h ${rem}m`;
+        if (h > 0) return `Est: ${h}h`;
+        return `Est: ${rem}m`;
+    }
+
+    parseEstimate(input) {
+        const raw = String(input).trim();
+        if (raw === '') return { valid: false, minutes: null, message: 'Empty' };
+        // Accept mm or hh:mm
+        const mmOnly = /^\d{1,3}$/; // up to 999 minutes
+        const hhmm = /^(\d{1,3}):(\d{1,2})$/;
+        if (mmOnly.test(raw)) {
+            return { valid: true, minutes: parseInt(raw, 10) };
+        }
+        const m = raw.match(hhmm);
+        if (m) {
+            const h = parseInt(m[1], 10);
+            const mins = parseInt(m[2], 10);
+            if (mins >= 60) return { valid: false, minutes: null, message: 'Minutes must be < 60' };
+            return { valid: true, minutes: h * 60 + mins };
+        }
+        return { valid: false, minutes: null, message: 'Use mm or hh:mm' };
+    }
+
+    showEstimateEditor() {
+        const row = this.element.querySelector('.task-estimate-row');
+        if (!row) return;
+        row.innerHTML = '';
+        const editor = document.createElement('div');
+        editor.className = 'estimate-editor';
+        editor.innerHTML = `
+            <input class="estimate-input" type="text" inputmode="numeric" placeholder="25 or 1:25" aria-label="Estimated time" />
+            <div class="estimate-error" aria-live="polite" role="alert" style="display:none"></div>
+        `;
+        const input = editor.querySelector('.estimate-input');
+        const err = editor.querySelector('.estimate-error');
+        const current = this.getEstimateMinutes();
+        if (current != null) {
+            const h = Math.floor(current / 60);
+            const rem = current % 60;
+            input.value = h > 0 ? `${h}:${String(rem).padStart(2,'0')}` : String(rem);
+        }
+        row.appendChild(editor);
+        input.focus();
+
+        // Only allow numbers, auto-insert ":" after two digits, and allow editing
+        const mask = (e) => {
+            // Save previous value and cursor position
+            let prevValue = input.value;
+            let prevCursor = input.selectionStart;
+
+            // Remove all non-digit characters
+            let raw = prevValue.replace(/[^\d]/g, '');
+
+            // Limit to 4 digits (HHMM)
+            if (raw.length > 4) raw = raw.slice(0, 4);
+
+            let formatted = '';
+            if (raw.length > 2) {
+                formatted = raw.slice(0, 2) + ':' + raw.slice(2);
+            } else {
+                formatted = raw;
+            }
+
+            // Set the formatted value
+            input.value = formatted;
+
+            // --- Cursor logic ---
+            let newCursor = prevCursor;
+
+            // If just typed the third digit (i.e. after "12" type "3")
+            if (
+                raw.length === 3 &&
+                prevValue.length === 2 &&
+                prevCursor === 2
+            ) {
+                // After typing "3" after "12", value becomes "12:3", so move cursor after the "3"
+                newCursor = 4;
+            }
+            // If just typed the fourth digit (i.e. after "12:3" type "4")
+            else if (
+                raw.length === 4 &&
+                prevValue.length === 4 &&
+                prevCursor === 4
+            ) {
+                // After typing "4" after "12:3", value becomes "12:34", so move cursor after the "4"
+                newCursor = 5;
+            }
+            // If deleting the colon
+            else if (
+                prevValue.charAt(prevCursor - 1) === ':' &&
+                formatted.length < prevValue.length
+            ) {
+                newCursor = prevCursor - 1;
+            }
+            // If cursor is positioned on the colon, move it after the colon
+            else if (
+                formatted.charAt(newCursor) === ':'
+            ) {
+                newCursor++;
+            }
+            // If the formatted string got longer (colon was added), adjust cursor
+            else if (formatted.length > prevValue.length) {
+                newCursor = prevCursor + 1;
+            }
+            // If the formatted string is shorter, adjust cursor
+            else if (formatted.length < prevValue.length) {
+                newCursor = Math.max(0, newCursor - (prevValue.length - formatted.length));
+            }
+
+            // Set the new cursor position safely
+            setTimeout(() => {
+                input.setSelectionRange(newCursor, newCursor);
+            }, 0);
+        };
+        input.addEventListener('input', mask);
+
+        const cleanup = () => {
+            document.removeEventListener('mousedown', onDocClick, true);
+        };
+
+        const commit = () => {
+            const { valid, minutes, message } = this.parseEstimate(input.value);
+            if (!valid) {
+                err.textContent = message;
+                err.style.display = 'block';
+                input.focus();
+                return;
+            }
+            this.task.estimateMinutes = minutes;
+            // remove legacy field to avoid confusion
+            delete this.task.estimateTime;
+            cleanup();
+            this.updateTaskAndNotify();
+        };
+        const cancel = () => {
+            cleanup();
+            this.updateTask(this.task);
+        };
+
+        input.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') { e.preventDefault(); commit(); }
+            if (e.key === 'Escape') { e.preventDefault(); cancel(); }
+        });
+        // Click outside cancels editing (discard changes)
+        const onDocClick = (e) => {
+            if (!editor.contains(e.target)) {
+                cancel();
+            }
+        };
+        document.addEventListener('mousedown', onDocClick, true);
     }
 
     showEditTitleInput() {

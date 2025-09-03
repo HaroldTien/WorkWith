@@ -34,6 +34,7 @@
             justify-content: center;
             padding-top: 36px; /* space for fixed title bar */
         }
+        body.focus-mode-active { padding-top: 0; }
         
         /* Draggable header bar */
         .titlebar {
@@ -53,6 +54,7 @@
             user-select: none;
             z-index: 1000;
         }
+        body.focus-mode-active .titlebar { display: none; }
         .titlebar .controls { 
             display: flex; 
             gap: 8px; 

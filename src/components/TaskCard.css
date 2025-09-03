@@ -27,13 +27,20 @@
     justify-content: space-between;
     align-items: flex-start;
     gap: 8px;
+    padding-bottom: 0; /* Remove all bottom padding */
+    margin-bottom: 0; /* Remove any margin */
+    height: 20px;
+    
 }
+
+
 
 .task-title {
     color: #ffffff;
     font-size: 14px;
     font-weight: 500;
-    line-height: 1.4;
+    line-height: 1.1; /* tighter to reduce content box height */
+    margin: 0; /* remove default margins */
     flex: 1;
     word-wrap: break-word;
     transition: all 0.2s ease;
@@ -126,6 +133,76 @@
     display: flex;
     align-items: center;
     gap: 4px;
+}
+
+.task-estimate-row {
+    margin-top: 0; /* remove extra gap under title */
+}
+
+.estimate-placeholder {
+    display: none; /* hidden until hover/focus for cleaner UI */
+    min-width: 48px;
+    height: 10px;
+    border-radius: 6px;
+    border: 1px dashed rgba(148,163,184,0.5);
+    background: transparent;
+    cursor: pointer;
+}
+
+/* Show on card hover */
+.task-card:hover .estimate-placeholder {
+    display: inline-block;
+}
+
+.estimate-placeholder:hover,
+.estimate-placeholder:focus {
+    border-color: rgba(148,163,184,0.9);
+    outline: none;
+    background: rgba(148,163,184,0.08);
+}
+
+.estimate-badge {
+    display: inline-block;
+    padding: 2px 6px;
+    font-size: 11px;
+    color: #e5e7eb;
+    background: rgba(59,130,246,0.18);
+    border: 1px solid rgba(59,130,246,0.35);
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.estimate-badge:hover,
+.estimate-badge:focus {
+    background: rgba(59,130,246,0.25);
+    outline: none;
+}
+
+.estimate-editor {
+    display: inline-flex;
+    gap: 6px;
+    align-items: center;
+}
+
+.estimate-input {
+    width: 80px;
+    padding: 4px 6px;
+    border-radius: 6px;
+    border: 1px solid rgba(148,163,184,0.5);
+    background: rgba(255,255,255,0.05);
+    color: #e5e7eb;
+    font-size: 12px;
+}
+
+.estimate-input:focus {
+    outline: none;
+    border-color: rgba(59,130,246,0.6);
+    box-shadow: 0 0 0 3px rgba(59,130,246,0.15);
+}
+
+.estimate-error {
+    color: #f87171;
+    font-size: 11px;
 }
 
 /* Subtasks styling */

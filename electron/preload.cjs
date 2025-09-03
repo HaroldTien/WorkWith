@@ -14,6 +14,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
     maximize: () => ipcRenderer.send('window-maximize'),
     close: () => ipcRenderer.send('window-close'),
   },
+  focusMode: {
+    resizeWindow: () => ipcRenderer.send('focus-mode-resize'),
+    restoreWindow: () => ipcRenderer.send('focus-mode-restore'),
+  },
 });
 
 console.log('🔧 Preload (CJS) loaded');

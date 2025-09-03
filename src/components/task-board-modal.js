@@ -1,5 +1,6 @@
 // Floating Task Board Modal Component
 import { TaskCard } from './TaskCard.js';
+import { FocusMode } from './focusMode.js';
 
 export class TaskBoardModal {
     constructor(boardName = 'Task Board') {
@@ -14,6 +15,7 @@ export class TaskBoardModal {
         this.loadStyles(); // Load external CSS
         this.element = this.createModal();
         this.bindEvents();
+        this.focusMode = null;
     }
 
     createModal() {
@@ -23,7 +25,10 @@ export class TaskBoardModal {
             <div class="task-board-modal">
                 <header class="task-board-header">
                     <h2>${this.boardName}</h2>
-                    <button class="close-btn" aria-label="Close">×</button>
+                    <div class="header-actions">
+                        <button class="focus-mode-btn" title="Focus">Focus</button>
+                        <button class="close-btn" aria-label="Close">×</button>
+                    </div>
                 </header>
                 <div class="task-board-content">
                     <div class="task-column" data-status="in-process">
@@ -103,6 +108,12 @@ export class TaskBoardModal {
         this.element.addEventListener('click', (e) => {
             if (e.target === this.element) this.hide();
         });
+
+        // Focus Mode button
+        const focusBtn = this.element.querySelector('.focus-mode-btn');
+        if (focusBtn) {
+            focusBtn.addEventListener('click', () => this.activateFocusMode());
+        }
 
         // Initial binding of hover button events
         this.bindHoverButtonEvents();
@@ -189,6 +200,11 @@ export class TaskBoardModal {
         
         // Dispatch event to notify home page about task count change
         this.dispatchTaskCountUpdate();
+        
+        // Notify Focus Mode if 'today' task was deleted
+        if (this.focusMode && status === 'today') {
+            this.focusMode.onTaskBoardUpdate();
+        }
         
         // Show success message
         this.showSuccessMessage(`Task "${task.title}" deleted successfully!`);
@@ -302,6 +318,11 @@ export class TaskBoardModal {
         // Dispatch event to notify home page about task count change
         this.dispatchTaskCountUpdate();
         
+        // Notify Focus Mode if 'today' tasks were affected
+        if (this.focusMode && (fromStatus === 'today' || toStatus === 'today')) {
+            this.focusMode.onTaskBoardUpdate();
+        }
+        
         // Show success message
         const statusNames = {
             'in-process': 'In Process',
@@ -396,6 +417,11 @@ export class TaskBoardModal {
         this.renderTasks();
         this.saveToLocalStorage();
         
+        // Notify Focus Mode of order change
+        if (this.focusMode && status === 'today') {
+            this.focusMode.onTaskBoardUpdate();
+        }
+        
         console.log(`✅ Reordered task "${task.title}" in ${status}`);
     }
 
@@ -484,6 +510,70 @@ export class TaskBoardModal {
             e.target.value = value;
         });
 
+        // Add dropdown functionality for time input
+        const showTimeDropdown = () => {
+            // Remove any existing dropdown
+            const existingDropdown = modalOverlay.querySelector('.time-dropdown');
+            if (existingDropdown) {
+                existingDropdown.remove();
+            }
+
+            // Create dropdown
+            const dropdown = document.createElement('div');
+            dropdown.className = 'time-dropdown';
+            dropdown.innerHTML = `
+                <div class="dropdown-option" data-minutes="10">10m</div>
+                <div class="dropdown-option" data-minutes="30">30m</div>
+                <div class="dropdown-option" data-minutes="60">1h</div>
+                <div class="dropdown-option" data-minutes="90">1h 30m</div>
+                <div class="dropdown-option" data-minutes="120">2h</div>
+                <div class="dropdown-option" data-minutes="150">2h 30m</div>
+                <div class="dropdown-option" data-minutes="180">3h</div>
+            `;
+
+            // Position dropdown below the input
+            const inputContainer = timeInput.parentNode;
+            inputContainer.style.position = 'relative';
+            inputContainer.appendChild(dropdown);
+
+            // Add click handlers for options
+            const options = dropdown.querySelectorAll('.dropdown-option');
+            options.forEach(option => {
+                option.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const minutes = parseInt(option.dataset.minutes);
+                    const hours = Math.floor(minutes / 60);
+                    const mins = minutes % 60;
+                    
+                    // Format as HH:MM
+                    const formattedTime = hours > 0 ? 
+                        `${hours}:${String(mins).padStart(2, '0')}` : 
+                        `0:${String(mins).padStart(2, '0')}`;
+                    
+                    timeInput.value = formattedTime;
+                    timeInput.blur(); // Blur the input as requested
+                    dropdown.remove();
+                });
+            });
+
+            // Close dropdown when clicking outside
+            const closeDropdown = (e) => {
+                if (!dropdown.contains(e.target) && !timeInput.contains(e.target)) {
+                    dropdown.remove();
+                    document.removeEventListener('mousedown', closeDropdown, true);
+                }
+            };
+
+            // Use setTimeout to avoid immediate closure
+            setTimeout(() => {
+                document.addEventListener('mousedown', closeDropdown, true);
+            }, 100);
+        };
+
+        // Add focus and click event listeners
+        timeInput.addEventListener('focus', showTimeDropdown);
+        timeInput.addEventListener('click', showTimeDropdown);
+
         // Handle backspace properly
         timeInput.addEventListener('keydown', (e) => {
             if (e.key === 'Backspace') {
@@ -539,6 +629,11 @@ export class TaskBoardModal {
             
             // Dispatch event to notify home page about task count change
             this.dispatchTaskCountUpdate();
+            
+            // Notify Focus Mode if task added to 'today'
+            if (this.focusMode && status === 'today') {
+                this.focusMode.onTaskBoardUpdate();
+            }
             
             // Show success message
             this.showSuccessMessage(`Task "${title}" added successfully!`);
@@ -696,5 +791,23 @@ export class TaskBoardModal {
         } else {
             this.show();
         }
+    }
+
+    // --- Focus Mode integration ---
+    activateFocusMode() {
+        if (!this.focusMode) {
+            this.focusMode = new FocusMode(this);
+        }
+        // Hide modal first
+        this.hide();
+        // Activate focus mode
+        this.focusMode.activate();
+
+        // When deactivated, re-show the board
+        const onDeactivate = () => {
+            this.show();
+            document.removeEventListener('focusModeDeactivated', onDeactivate);
+        };
+        document.addEventListener('focusModeDeactivated', onDeactivate);
     }
 }
