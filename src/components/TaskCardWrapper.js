@@ -53,10 +53,16 @@ export class TaskCardWrapper {
     }
 
     handleEditEstimate(taskId) {
-        // This would need to be implemented based on the original TaskCard's showEstimateEditor method
-        // For now, we'll just call the update callback
-        if (this.onUpdateTask) {
-            this.onUpdateTask(this.task);
+        // Get the unified card's strategy and call its estimate editor
+        if (this.unifiedCard && this.unifiedCard.strategy) {
+            this.unifiedCard.strategy.showEstimateEditor(this.element, {
+                onUpdateTask: (updatedTask) => {
+                    this.task = updatedTask;
+                    if (this.onUpdateTask) {
+                        this.onUpdateTask(updatedTask);
+                    }
+                }
+            }, this.task);
         }
     }
 

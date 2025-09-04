@@ -54,7 +54,7 @@ export class UnifiedTaskCard {
         this.element.innerHTML = this.strategy.getHTML(this.task, this.callbacks);
         
         // Bind events using strategy
-        this.strategy.bindEvents(this.element, this.callbacks);
+        this.strategy.bindEvents(this.element, this.callbacks, this.task);
         
         this.isInitialized = true;
         return this.element;
@@ -65,7 +65,7 @@ export class UnifiedTaskCard {
         this.task = task;
         if (this.element) {
             this.element.innerHTML = this.strategy.getHTML(this.task, this.callbacks);
-            this.strategy.bindEvents(this.element, this.callbacks);
+            this.strategy.bindEvents(this.element, this.callbacks, this.task);
         }
     }
 
@@ -119,7 +119,7 @@ class BaseStrategy {
         throw new Error('getHTML must be implemented by strategy');
     }
     
-    bindEvents(element, callbacks) {
+    bindEvents(element, callbacks, task) {
         throw new Error('bindEvents must be implemented by strategy');
     }
 }
@@ -142,7 +142,7 @@ class FocusStrategy extends BaseStrategy {
             <button class="done-btn" title="Done">✓</button>`;
     }
     
-    bindEvents(element, callbacks) {
+    bindEvents(element, callbacks, task) {
         const doneBtn = element.querySelector('.done-btn');
         if (doneBtn && callbacks.onMarkDone) {
             doneBtn.addEventListener('click', (e) => {
@@ -218,7 +218,7 @@ class BoardStrategy extends BaseStrategy {
         `;
     }
     
-    bindEvents(element, callbacks) {
+    bindEvents(element, callbacks, task) {
         // Delete button event
         const deleteBtn = element.querySelector('.delete-task-btn');
         if (deleteBtn && callbacks.onDelete) {
@@ -248,15 +248,15 @@ class BoardStrategy extends BaseStrategy {
 
         // Estimate: placeholder/badge click to edit
         const estTrigger = element.querySelector('.estimate-placeholder, .estimate-badge');
-        if (estTrigger && callbacks.onEditEstimate) {
+        if (estTrigger) {
             estTrigger.addEventListener('click', (e) => {
                 e.stopPropagation();
-                callbacks.onEditEstimate(this.getTaskId(element));
+                this.showEstimateEditor(element, callbacks, task);
             });
             estTrigger.addEventListener('keydown', (e) => {
                 if (e.key === 'Enter' || e.key === ' ') {
                     e.preventDefault();
-                    callbacks.onEditEstimate(this.getTaskId(element));
+                    this.showEstimateEditor(element, callbacks, task);
                 }
             });
         }
@@ -337,5 +337,175 @@ class BoardStrategy extends BaseStrategy {
     
     getTaskId(element) {
         return parseInt(element.dataset.taskId);
+    }
+    
+    showEstimateEditor(element, callbacks, task) {
+        const estimateRow = element.querySelector('.task-estimate-row');
+        if (!estimateRow) return;
+        
+        // Hide the current estimate display
+        const currentEstimate = estimateRow.querySelector('.estimate-badge, .estimate-placeholder');
+        if (currentEstimate) {
+            currentEstimate.style.display = 'none';
+        }
+        
+        // Create editor
+        const editor = document.createElement('div');
+        editor.className = 'estimate-editor';
+        editor.innerHTML = `
+            <input type="text" class="estimate-input" placeholder="HH:MM" value="${this.getCurrentEstimateValue(element, task)}" maxlength="5">
+        `;
+        
+        estimateRow.appendChild(editor);
+        
+        const input = editor.querySelector('.estimate-input');
+        
+        // Focus and select input
+        input.focus();
+        input.select();
+        
+        // Auto-format input
+        input.addEventListener('input', (e) => {
+            let value = e.target.value.replace(/[^\d]/g, '');
+            if (value.length >= 2) {
+                value = value.substring(0, 2) + ':' + value.substring(2, 4);
+            }
+            if (value.length > 5) {
+                value = value.substring(0, 5);
+            }
+            e.target.value = value;
+        });
+        
+        // Save estimate function
+        const saveEstimate = () => {
+            const value = input.value.trim();
+            const minutes = this.parseEstimateInput(value);
+            
+            if (minutes !== null && minutes >= 0) {
+                // Update task
+                task.estimateMinutes = minutes;
+                task.estimateTime = this.formatEstimateTime(minutes);
+                
+                // Update UI
+                this.updateEstimateDisplay(element, task);
+                
+                // Notify callback
+                if (callbacks.onUpdateTask) {
+                    callbacks.onUpdateTask(task);
+                }
+            }
+            
+            editor.remove();
+            if (currentEstimate) {
+                currentEstimate.style.display = '';
+            }
+        };
+        
+        // Cancel editing function (revert to original)
+        const cancelEdit = () => {
+            editor.remove();
+            if (currentEstimate) {
+                currentEstimate.style.display = '';
+            }
+        };
+        
+        // Keyboard events
+        input.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                saveEstimate();
+            } else if (e.key === 'Escape') {
+                e.preventDefault();
+                cancelEdit();
+            }
+        });
+        
+        // Auto-save when clicking outside or losing focus
+        const handleClickOutside = (e) => {
+            if (!editor.contains(e.target)) {
+                saveEstimate(); // Auto-save instead of cancel
+                document.removeEventListener('click', handleClickOutside);
+            }
+        };
+        
+        // Also save on blur (when input loses focus)
+        input.addEventListener('blur', () => {
+            setTimeout(() => {
+                if (document.contains(editor)) { // Check if editor still exists
+                    saveEstimate();
+                }
+            }, 100); // Small delay to allow click events to process
+        });
+        
+        // Prevent input clicks from closing the editor
+        input.addEventListener('mousedown', (e) => {
+            e.stopPropagation();
+        });
+        
+        setTimeout(() => {
+            document.addEventListener('click', handleClickOutside);
+        }, 100);
+    }
+    
+    getCurrentEstimateValue(element, task) {
+        const minutes = this.getEstimateMinutes(task);
+        if (minutes === null) return '';
+        
+        const hours = Math.floor(minutes / 60);
+        const mins = minutes % 60;
+        
+        if (hours > 0) {
+            return `${hours}:${String(mins).padStart(2, '0')}`;
+        } else {
+            return `0:${String(mins).padStart(2, '0')}`;
+        }
+    }
+    
+    parseEstimateInput(value) {
+        if (!value || value.trim() === '') return 0;
+        
+        const parts = value.split(':');
+        if (parts.length === 2) {
+            const hours = parseInt(parts[0], 10) || 0;
+            const minutes = parseInt(parts[1], 10) || 0;
+            return hours * 60 + minutes;
+        }
+        
+        // Try parsing as just minutes
+        const minutes = parseInt(value, 10);
+        return isNaN(minutes) ? null : minutes;
+    }
+    
+    formatEstimateTime(minutes) {
+        const hours = Math.floor(minutes / 60);
+        const mins = minutes % 60;
+        return `${String(hours).padStart(2, '0')}:${String(mins).padStart(2, '0')}`;
+    }
+    
+    updateEstimateDisplay(element, task) {
+        const estimateRow = element.querySelector('.task-estimate-row');
+        if (!estimateRow) return;
+        
+        const minutes = this.getEstimateMinutes(task);
+        const estimateHTML = minutes != null
+            ? `<button class="estimate-badge" type="button" aria-label="Estimated time" title="Edit estimate">${this.formatEstimate(minutes)}</button>`
+            : `<button class="estimate-placeholder" type="button" role="button" aria-label="Estimated time" title="Add estimate"></button>`;
+        
+        estimateRow.innerHTML = estimateHTML;
+        
+        // Re-bind events
+        const estTrigger = estimateRow.querySelector('.estimate-placeholder, .estimate-badge');
+        if (estTrigger) {
+            estTrigger.addEventListener('click', (e) => {
+                e.stopPropagation();
+                this.showEstimateEditor(element, {}, task);
+            });
+            estTrigger.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    this.showEstimateEditor(element, {}, task);
+                }
+            });
+        }
     }
 }
