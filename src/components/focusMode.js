@@ -11,6 +11,7 @@ export class FocusMode {
         this.taskTimers = {}; // Individual task timers: { taskId: { totalSeconds: 0, running: false, handle: null } }
         this.currentTaskId = null; // Currently focused task ID
         this.keydownHandler = null;
+        this.beforeUnloadHandler = null; // Handle reload while in focus mode
         this.settings = this.loadAppSettings();
         this.isMinimalMode = false; // Track minimal mode state
         this.loadStyles();
@@ -131,6 +132,19 @@ export class FocusMode {
         this.renderTasks();
         // Hide global title bar during focus mode
         document.body.classList.add('focus-mode-active');
+
+        // Ensure window is restored if the page is reloaded (Ctrl+R/F5)
+        this.beforeUnloadHandler = () => {
+            try {
+                if (window.electronAPI && window.electronAPI.minimalMode) {
+                    window.electronAPI.minimalMode.restoreWindow();
+                }
+                if (window.electronAPI && window.electronAPI.focusMode) {
+                    window.electronAPI.focusMode.restoreWindow();
+                }
+            } catch {}
+        };
+        window.addEventListener('beforeunload', this.beforeUnloadHandler);
     }
 
     deactivate() {
@@ -152,6 +166,10 @@ export class FocusMode {
         if (this.keydownHandler) {
             document.removeEventListener('keydown', this.keydownHandler);
             this.keydownHandler = null;
+        }
+        if (this.beforeUnloadHandler) {
+            window.removeEventListener('beforeunload', this.beforeUnloadHandler);
+            this.beforeUnloadHandler = null;
         }
         document.dispatchEvent(new CustomEvent('focusModeDeactivated'));
         // Restore global UI state
@@ -222,7 +240,40 @@ export class FocusMode {
         start.addEventListener('click', () => this.startTimer());
         pause.addEventListener('click', () => this.pauseTimer());
         compressBtn.addEventListener('click', () => this.toggleMinimalMode());
-        this.keydownHandler = (e) => { if (e.key === 'Escape') this.deactivate(); };
+        this.keydownHandler = (e) => {
+            // Escape exits focus mode
+            if (e.key === 'Escape') {
+                this.deactivate();
+                return;
+            }
+            // Intercept reload shortcuts to restore window and prevent stuck size
+            const key = String(e.key || '').toLowerCase();
+            if ((e.ctrlKey || e.metaKey) && key === 'r') {
+                e.preventDefault();
+                // Restore window then navigate back by deactivating
+                try {
+                    if (window.electronAPI && window.electronAPI.minimalMode) {
+                        window.electronAPI.minimalMode.restoreWindow();
+                    }
+                    if (window.electronAPI && window.electronAPI.focusMode) {
+                        window.electronAPI.focusMode.restoreWindow();
+                    }
+                } catch {}
+                this.deactivate();
+            }
+            if (key === 'f5') {
+                e.preventDefault();
+                try {
+                    if (window.electronAPI && window.electronAPI.minimalMode) {
+                        window.electronAPI.minimalMode.restoreWindow();
+                    }
+                    if (window.electronAPI && window.electronAPI.focusMode) {
+                        window.electronAPI.focusMode.restoreWindow();
+                    }
+                } catch {}
+                this.deactivate();
+            }
+        };
         document.addEventListener('keydown', this.keydownHandler);
         this.enableDnD();
 
