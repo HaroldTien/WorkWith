@@ -6,8 +6,11 @@ export class FocusMode {
         this.root = null;
         this.timer = { minutes: 25, seconds: 0, running: false, handle: null };
         this.positiveTimer = { totalSeconds: 0, running: false, handle: null }; // New positive timer
+        this.taskTimers = {}; // Individual task timers: { taskId: { totalSeconds: 0, running: false, handle: null } }
+        this.currentTaskId = null; // Currently focused task ID
         this.keydownHandler = null;
         this.loadStyles();
+        this.loadTaskTimers();
     }
     loadStyles() {
         if (document.getElementById('focus-mode-styles')) return;
@@ -17,6 +20,88 @@ export class FocusMode {
         link.type = 'text/css';
         try { link.href = new URL('./focusMode.css', import.meta.url).href; } catch {}
         document.head.appendChild(link);
+    }
+
+    // Load task timers from localStorage
+    loadTaskTimers() {
+        try {
+            const saved = localStorage.getItem('focusModeTaskTimers');
+            if (saved) {
+                this.taskTimers = JSON.parse(saved);
+            }
+        } catch (error) {
+            console.warn('Failed to load task timers:', error);
+            this.taskTimers = {};
+        }
+    }
+
+    // Save task timers to localStorage
+    saveTaskTimers() {
+        try {
+            localStorage.setItem('focusModeTaskTimers', JSON.stringify(this.taskTimers));
+        } catch (error) {
+            console.warn('Failed to save task timers:', error);
+        }
+    }
+
+    // Get or create task timer
+    getTaskTimer(taskId) {
+        if (!this.taskTimers[taskId]) {
+            this.taskTimers[taskId] = { totalSeconds: 0, running: false, handle: null };
+        }
+        return this.taskTimers[taskId];
+    }
+
+    // Start timer for current task
+    startCurrentTaskTimer() {
+        if (!this.currentTaskId) return;
+        const taskTimer = this.getTaskTimer(this.currentTaskId);
+        if (taskTimer.running) return;
+        
+        taskTimer.running = true;
+        taskTimer.handle = setInterval(() => {
+            taskTimer.totalSeconds++;
+            this.saveTaskTimers(); // Save every second
+            this.updateCurrentTaskTimer(); // Update UI
+        }, 1000);
+    }
+
+    // Pause timer for current task
+    pauseCurrentTaskTimer() {
+        if (!this.currentTaskId) return;
+        const taskTimer = this.getTaskTimer(this.currentTaskId);
+        if (!taskTimer.running) return;
+        
+        taskTimer.running = false;
+        clearInterval(taskTimer.handle);
+        taskTimer.handle = null;
+        this.saveTaskTimers(); // Save when paused
+    }
+
+    // Update current task timer display
+    updateCurrentTaskTimer() {
+        if (!this.currentTaskId) return;
+        const taskTimer = this.getTaskTimer(this.currentTaskId);
+        const ongoingTask = this.root.querySelector('.focus-task-item.current-ongoing');
+        if (!ongoingTask) return;
+        
+        const countdown = ongoingTask.querySelector('.task-countdown');
+        if (!countdown) return;
+        
+        // Format time: HH:MM:SS or MM:SS
+        const formatTime = (totalSeconds) => {
+            const hours = Math.floor(totalSeconds / 3600);
+            const minutes = Math.floor((totalSeconds % 3600) / 60);
+            const seconds = Math.floor(totalSeconds % 60);
+            
+            if (hours > 0) {
+                return `${hours}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+            } else {
+                return `${minutes}:${String(seconds).padStart(2, '0')}`;
+            }
+        };
+        
+        countdown.textContent = `Time spent: ${formatTime(taskTimer.totalSeconds)}`;
     }
 
     activate() {
@@ -37,7 +122,9 @@ export class FocusMode {
         
         // Stop all timers and reset positive timer
         this.pauseTimer();
+        this.pauseCurrentTaskTimer(); // Pause current task timer
         this.positiveTimer.totalSeconds = 0;
+        this.saveTaskTimers(); // Save task timers before closing
         
         if (this.root && this.root.parentNode) this.root.parentNode.removeChild(this.root);
         const mainContainer = document.getElementById('mainContainer');
@@ -123,6 +210,11 @@ export class FocusMode {
         this.root.querySelector('.t-start').style.display = 'none';
         this.root.querySelector('.t-pause').style.display = 'inline-block';
         
+        // Start current task timer if there's an ongoing task
+        if (this.currentTaskId) {
+            this.startCurrentTaskTimer();
+        }
+        
         // Pomodoro timer
         this.timer.handle = setInterval(() => {
             if (this.timer.seconds === 0) {
@@ -144,6 +236,10 @@ export class FocusMode {
         if (!this.timer.running) return;
         this.timer.running = false;
         this.positiveTimer.running = false; // Pause positive timer too
+        
+        // Pause current task timer
+        this.pauseCurrentTaskTimer();
+        
         clearInterval(this.timer.handle);
         clearInterval(this.positiveTimer.handle);
         this.root.querySelector('.t-start').style.display = 'inline-block';
@@ -331,6 +427,11 @@ export class FocusMode {
         const list = this.root.querySelector('#focus-task-list');
         if (!list) return;
 
+        // Pause previous task timer if switching tasks
+        if (this.currentTaskId) {
+            this.pauseCurrentTaskTimer();
+        }
+
         // Remove ongoing styling and progress bars from all tasks
         const allTasks = list.querySelectorAll('.focus-task-item');
         allTasks.forEach(task => {
@@ -347,24 +448,36 @@ export class FocusMode {
         if (firstTask) {
             firstTask.classList.add('current-ongoing');
             
+            // Set current task ID
+            this.currentTaskId = parseInt(firstTask.dataset.taskId);
+            
             // Add progress bar if task has estimate
-            const taskId = parseInt(firstTask.dataset.taskId);
-            const task = this.taskBoard.tasks['today'].find(t => t.id === taskId);
+            const task = this.taskBoard.tasks['today'].find(t => t.id === this.currentTaskId);
             if (task) {
                 const estimateMinutes = this.getTaskEstimateMinutes(task);
-                if (estimateMinutes && estimateMinutes > 0) {
-                    const taskContent = firstTask.querySelector('.task-content');
-                    const progressHTML = `
-                        <div class="task-progress-container">
-                            <div class="task-progress-bar">
-                                <div class="task-progress-fill" style="width: 0%"></div>
-                            </div>
-                            <div class="task-countdown">${this.formatEstimateTime(estimateMinutes)}</div>
+                const taskContent = firstTask.querySelector('.task-content');
+                
+                // Always add progress container for count-up timer
+                const progressHTML = `
+                    <div class="task-progress-container">
+                        <div class="task-progress-bar">
+                            <div class="task-progress-fill" style="width: 0%"></div>
                         </div>
-                    `;
-                    taskContent.insertAdjacentHTML('beforeend', progressHTML);
+                        <div class="task-countdown">Time spent: 0:00</div>
+                    </div>
+                `;
+                taskContent.insertAdjacentHTML('beforeend', progressHTML);
+                
+                // Update timer display with saved time
+                this.updateCurrentTaskTimer();
+                
+                // Start timer if main timer is running
+                if (this.timer.running) {
+                    this.startCurrentTaskTimer();
                 }
             }
+        } else {
+            this.currentTaskId = null;
         }
     }
     
@@ -392,8 +505,9 @@ export class FocusMode {
         
         if (!progressFill || !countdown) return;
         
-        // Calculate progress based on focused time (accurate to seconds)
-        const focusedSeconds = this.positiveTimer.totalSeconds;
+        // Use task-specific timer instead of general positive timer
+        const taskTimer = this.getTaskTimer(taskId);
+        const focusedSeconds = taskTimer.totalSeconds;
         const estimateSeconds = estimateMinutes * 60;
         const progressPercent = Math.min((focusedSeconds / estimateSeconds) * 100, 100);
         

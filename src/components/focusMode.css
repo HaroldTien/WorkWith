@@ -21,19 +21,24 @@
 }
 
 .focus-back {
-    width: 18px;
-    height: 18px;
-    border-radius: 50%;
-    border: 1px solid rgba(148, 163, 184, 0.55);
-    background: rgba(148, 163, 184, 0.12);
-    color: #e2e8f0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    -webkit-app-region: no-drag;
-    transition: all 0.15s ease;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+    width: 20px !important;
+    height: 20px !important;
+    border-radius: 50% !important;
+    border: 1px solid rgba(148, 163, 184, 0.55) !important;
+    background: rgba(148, 163, 184, 0.12) !important;
+    color: #e2e8f0 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    cursor: pointer !important;
+    -webkit-app-region: no-drag !important;
+    transition: all 0.15s ease !important;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25) !important;
+    flex-shrink: 0 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    font-size: 0 !important;
+    line-height: 0 !important;
 }
 
 .focus-back:hover {
@@ -45,6 +50,7 @@
 .focus-back svg {
     width: 10px;
     height: 10px;
+    stroke-width: 2;
 }
 
 .focus-content {
