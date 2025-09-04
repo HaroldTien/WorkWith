@@ -185,7 +185,6 @@ export class FocusMode {
                     <div class="timer-controls">
                         <button class="t-start" title="Start">▶</button>
                         <button class="t-pause" title="Pause" style="display:none">⏸</button>
-                        <button class="t-reset" title="Reset">⟲</button>
                     </div>
                     <button class="compress-btn" title="Minimize to Timer Only">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -219,11 +218,9 @@ export class FocusMode {
         this.root.querySelector('.focus-back').addEventListener('click', () => this.deactivate());
         const start = this.root.querySelector('.t-start');
         const pause = this.root.querySelector('.t-pause');
-        const reset = this.root.querySelector('.t-reset');
         const compressBtn = this.root.querySelector('.compress-btn');
         start.addEventListener('click', () => this.startTimer());
         pause.addEventListener('click', () => this.pauseTimer());
-        reset.addEventListener('click', () => this.resetTimer());
         compressBtn.addEventListener('click', () => this.toggleMinimalMode());
         this.keydownHandler = (e) => { if (e.key === 'Escape') this.deactivate(); };
         document.addEventListener('keydown', this.keydownHandler);
