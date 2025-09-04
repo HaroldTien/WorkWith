@@ -80,6 +80,11 @@
     margin-bottom: 8px;
 }
 
+/* Single timer layout when Pomodoro hidden */
+.timer-display.single-timer {
+    justify-content: center;
+}
+
 .pomodoro-timer,
 .positive-timer {
     text-align: center;

@@ -9,8 +9,22 @@ export class FocusMode {
         this.taskTimers = {}; // Individual task timers: { taskId: { totalSeconds: 0, running: false, handle: null } }
         this.currentTaskId = null; // Currently focused task ID
         this.keydownHandler = null;
+        this.settings = this.loadAppSettings();
         this.loadStyles();
         this.loadTaskTimers();
+    }
+
+    // Load app-level settings
+    loadAppSettings() {
+        try {
+            const saved = localStorage.getItem('workwith-settings');
+            const parsed = saved ? JSON.parse(saved) : {};
+            return {
+                showPomodoroTimer: parsed.showPomodoroTimer !== false, // default true
+            };
+        } catch {
+            return { showPomodoroTimer: true };
+        }
     }
     loadStyles() {
         if (document.getElementById('focus-mode-styles')) return;
@@ -176,6 +190,9 @@ export class FocusMode {
                     <div id="focus-task-list" class="focus-task-list"></div>
                 </section>
             </main>`;
+
+        // Apply initial visibility based on settings
+        this.applyPomodoroVisibility();
     }
 
     mount() {
@@ -201,6 +218,34 @@ export class FocusMode {
         this.keydownHandler = (e) => { if (e.key === 'Escape') this.deactivate(); };
         document.addEventListener('keydown', this.keydownHandler);
         this.enableDnD();
+
+        // React to settings changes
+        document.addEventListener('settingsChanged', (e) => {
+            const detail = e.detail || {};
+            const prev = this.settings.showPomodoroTimer;
+            this.settings.showPomodoroTimer = detail.showPomodoroTimer !== false;
+            this.applyPomodoroVisibility();
+            // If toggled off while running, stop pomodoro countdown only
+            if (prev && !this.settings.showPomodoroTimer && this.timer.handle) {
+                clearInterval(this.timer.handle);
+                this.timer.handle = null;
+            }
+        });
+    }
+
+    // Show/hide Pomodoro timer in UI and adjust layout
+    applyPomodoroVisibility() {
+        if (!this.root) return;
+        const display = this.root.querySelector('.timer-display');
+        const pomo = this.root.querySelector('.pomodoro-timer');
+        if (!display || !pomo) return;
+        if (this.settings.showPomodoroTimer) {
+            pomo.style.display = '';
+            display.classList.remove('single-timer');
+        } else {
+            pomo.style.display = 'none';
+            display.classList.add('single-timer');
+        }
     }
 
     startTimer() {
@@ -215,14 +260,16 @@ export class FocusMode {
             this.startCurrentTaskTimer();
         }
         
-        // Pomodoro timer
-        this.timer.handle = setInterval(() => {
-            if (this.timer.seconds === 0) {
-                if (this.timer.minutes === 0) { this.resetTimer(); return; }
-                this.timer.minutes--; this.timer.seconds = 59;
-            } else { this.timer.seconds--; }
-            this.updateTimer();
-        }, 1000);
+        // Pomodoro timer (only if enabled)
+        if (this.settings.showPomodoroTimer) {
+            this.timer.handle = setInterval(() => {
+                if (this.timer.seconds === 0) {
+                    if (this.timer.minutes === 0) { this.resetTimer(); return; }
+                    this.timer.minutes--; this.timer.seconds = 59;
+                } else { this.timer.seconds--; }
+                this.updateTimer();
+            }, 1000);
+        }
         
         // Positive timer
         this.positiveTimer.handle = setInterval(() => {
@@ -240,7 +287,7 @@ export class FocusMode {
         // Pause current task timer
         this.pauseCurrentTaskTimer();
         
-        clearInterval(this.timer.handle);
+        if (this.timer.handle) clearInterval(this.timer.handle);
         clearInterval(this.positiveTimer.handle);
         this.root.querySelector('.t-start').style.display = 'inline-block';
         this.root.querySelector('.t-pause').style.display = 'none';
@@ -248,6 +295,7 @@ export class FocusMode {
 
     resetTimer() { 
         this.pauseTimer(); 
+        // Only reset Pomodoro display; its interval is gated by setting
         this.timer.minutes = 25; 
         this.timer.seconds = 0; 
         this.positiveTimer.totalSeconds = 0; // Reset positive timer

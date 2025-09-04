@@ -72,6 +72,16 @@ export class SettingsModal {
                                 <div class="toggle-switch ${this.settings.autoSave ? 'active' : ''}" data-setting="autoSave"></div>
                             </div>
                         </div>
+
+                        <div class="settings-option">
+                            <div>
+                                <div class="settings-option-label">Pomodoro in Focus Mode</div>
+                                <div class="settings-option-description">Show the Pomodoro timer inside Focus Mode</div>
+                            </div>
+                            <div class="settings-option-control">
+                                <div class="toggle-switch ${this.settings.showPomodoroTimer ? 'active' : ''}" data-setting="showPomodoroTimer"></div>
+                            </div>
+                        </div>
                     </div>
                     
 
@@ -144,7 +154,8 @@ export class SettingsModal {
     getDefaultSettings() {
         return {
             darkTheme: true,
-            autoSave: true
+            autoSave: true,
+            showPomodoroTimer: true
         };
     }
 
@@ -153,6 +164,8 @@ export class SettingsModal {
             localStorage.setItem('workwith-settings', JSON.stringify(this.settings));
             this.showSuccessMessage('Settings saved successfully!');
             this.applySettings();
+            // Notify app of settings changes
+            document.dispatchEvent(new CustomEvent('settingsChanged', { detail: this.settings }));
         } catch (error) {
             console.error('Failed to save settings:', error);
             this.showErrorMessage('Failed to save settings');
