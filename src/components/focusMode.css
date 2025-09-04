@@ -70,6 +70,8 @@
     text-align: center;
     margin-top: 2px;
     -webkit-app-region: drag;
+    position: relative;
+    transition: all 0.3s ease;
 }
 
 .timer-display {
@@ -121,6 +123,42 @@
     border-radius: 6px;
     cursor: pointer;
     -webkit-app-region: no-drag;
+}
+
+/* Compress button styling */
+.compress-btn {
+    position: absolute !important;
+    bottom: 6px !important;
+    right: 6px !important;
+    width: 18px !important;
+    height: 18px !important;
+    background: rgba(255, 255, 255, 0.1) !important;
+    border: 1px solid rgba(255, 255, 255, 0.25) !important;
+    color: #e2e8f0 !important;
+    border-radius: 50% !important;
+    cursor: pointer !important;
+    -webkit-app-region: no-drag !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    transition: all 0.2s ease !important;
+    z-index: 10 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    font-size: 0 !important;
+    line-height: 0 !important;
+}
+
+.compress-btn:hover {
+    background: rgba(255, 255, 255, 0.2) !important;
+    border-color: rgba(255, 255, 255, 0.4) !important;
+    transform: scale(1.1) !important;
+}
+
+.compress-btn svg {
+    width: 8px !important;
+    height: 8px !important;
+    stroke-width: 2 !important;
 }
 
 .focus-tasks {
@@ -237,5 +275,62 @@
     border-radius: 6px;
     padding: 6px 8px;
     cursor: pointer;
+}
+
+/* Minimal mode styles - window shrunk to timer block size */
+.focus-mode-container.minimal-mode {
+    justify-content: center;
+    align-items: center;
+    padding: 0;
+    background: transparent;
+}
+
+.focus-mode-container.minimal-mode .focus-content {
+    justify-content: center;
+    align-items: center;
+    padding: 0;
+    gap: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.focus-mode-container.minimal-mode .focus-timer {
+    flex: none;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 15px;
+    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    box-sizing: border-box;
+}
+
+.focus-mode-container.minimal-mode .focus-tasks {
+    display: none !important;
+}
+
+.focus-mode-container.minimal-mode .focus-topbar {
+    display: none !important;
+}
+
+.focus-mode-container.minimal-mode .timer-display {
+    margin-bottom: 10px;
+}
+
+.focus-mode-container.minimal-mode .timer-time,
+.focus-mode-container.minimal-mode .positive-time {
+    font-size: 20px;
+}
+
+.focus-mode-container.minimal-mode .timer-controls {
+    margin-top: 10px;
+}
+
+.focus-mode-container.minimal-mode .timer-controls button {
+    padding: 6px 10px;
+    font-size: 12px;
 }
 

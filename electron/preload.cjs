@@ -18,6 +18,11 @@ contextBridge.exposeInMainWorld('electronAPI', {
     resizeWindow: () => ipcRenderer.send('focus-mode-resize'),
     restoreWindow: () => ipcRenderer.send('focus-mode-restore'),
   },
+  minimalMode: {
+    resizeWindow: () => ipcRenderer.send('minimal-mode-resize'),
+    resizeWindowAtPosition: (x, y) => ipcRenderer.send('minimal-mode-resize-at-position', x, y),
+    restoreWindow: () => ipcRenderer.send('minimal-mode-restore'),
+  },
 });
 
 console.log('🔧 Preload (CJS) loaded');

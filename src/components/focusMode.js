@@ -12,6 +12,7 @@ export class FocusMode {
         this.currentTaskId = null; // Currently focused task ID
         this.keydownHandler = null;
         this.settings = this.loadAppSettings();
+        this.isMinimalMode = false; // Track minimal mode state
         this.loadStyles();
         this.loadTaskTimers();
     }
@@ -186,6 +187,11 @@ export class FocusMode {
                         <button class="t-pause" title="Pause" style="display:none">⏸</button>
                         <button class="t-reset" title="Reset">⟲</button>
                     </div>
+                    <button class="compress-btn" title="Minimize to Timer Only">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M8 9l4-4 4 4m0 6l-4 4-4-4"></path>
+                        </svg>
+                    </button>
                 </section>
                 <section class="focus-tasks">
                     <h2>Today</h2>
@@ -214,9 +220,11 @@ export class FocusMode {
         const start = this.root.querySelector('.t-start');
         const pause = this.root.querySelector('.t-pause');
         const reset = this.root.querySelector('.t-reset');
+        const compressBtn = this.root.querySelector('.compress-btn');
         start.addEventListener('click', () => this.startTimer());
         pause.addEventListener('click', () => this.pauseTimer());
         reset.addEventListener('click', () => this.resetTimer());
+        compressBtn.addEventListener('click', () => this.toggleMinimalMode());
         this.keydownHandler = (e) => { if (e.key === 'Escape') this.deactivate(); };
         document.addEventListener('keydown', this.keydownHandler);
         this.enableDnD();
@@ -586,6 +594,55 @@ export class FocusMode {
         } else {
             progressFill.style.background = '#10b981'; // Green for normal progress
             countdown.style.color = '#94a3b8';
+        }
+    }
+
+    // Toggle minimal mode (shrink window to timer block size)
+    toggleMinimalMode() {
+        this.isMinimalMode = !this.isMinimalMode;
+        const container = this.root;
+        const tasksSection = this.root.querySelector('.focus-tasks');
+        const topbar = this.root.querySelector('.focus-topbar');
+        const compressBtn = this.root.querySelector('.compress-btn');
+        const timerBlock = this.root.querySelector('.focus-timer');
+        
+        if (this.isMinimalMode) {
+            // Enter minimal mode - hide everything except timer block and resize window
+            container.classList.add('minimal-mode');
+            tasksSection.style.display = 'none';
+            topbar.style.display = 'none';
+            
+            // Get timer block position relative to current window
+            const timerRect = timerBlock.getBoundingClientRect();
+            
+            // Resize Electron window to timer block size at timer block position
+            if (window.electronAPI && window.electronAPI.minimalMode) {
+                window.electronAPI.minimalMode.resizeWindowAtPosition(timerRect.left, timerRect.top);
+            }
+            
+            compressBtn.innerHTML = `
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M8 15l4 4 4-4m0-6l-4-4-4 4"></path>
+                </svg>
+            `;
+            compressBtn.title = 'Restore Full View';
+        } else {
+            // Exit minimal mode - restore all elements and window size
+            container.classList.remove('minimal-mode');
+            tasksSection.style.display = '';
+            topbar.style.display = '';
+            
+            // Restore Electron window to original size
+            if (window.electronAPI && window.electronAPI.minimalMode) {
+                window.electronAPI.minimalMode.restoreWindow();
+            }
+            
+            compressBtn.innerHTML = `
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M8 9l4-4 4 4m0 6l-4 4-4-4"></path>
+                </svg>
+            `;
+            compressBtn.title = 'Minimize to Timer Only';
         }
     }
 }
