@@ -1,5 +1,5 @@
 // Floating Task Board Modal Component
-import { TaskCard } from './TaskCard.js';
+import { TaskCardWrapper } from './TaskCardWrapper.js';
 import { FocusMode } from './focusMode.js';
 
 export class TaskBoardModal {
@@ -153,7 +153,7 @@ export class TaskBoardModal {
             
             list.innerHTML = '';
             this.tasks[status].forEach(task => {
-                const taskCard = TaskCard.createTaskCard(task, status, (taskId, taskStatus) => {
+                const taskCard = TaskCardWrapper.createTaskCard(task, status, (taskId, taskStatus) => {
                     this.deleteTask(taskId, taskStatus);
                 }, (taskId, fromStatus) => {
                     this.moveTaskToDone(taskId, fromStatus);

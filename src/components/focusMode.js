@@ -1,4 +1,6 @@
 // Focus Mode Component - shows timer and today's tasks, resizes window
+import { TaskCardFactory } from './TaskCardFactory.js';
+
 export class FocusMode {
     constructor(taskBoardInstance) {
         this.taskBoard = taskBoardInstance; // TaskBoardModal instance
@@ -344,23 +346,12 @@ export class FocusMode {
     }
 
     createTask(task) {
-        const el = document.createElement('div');
-        el.className = 'focus-task-item';
-        el.draggable = true;
-        el.dataset.taskId = String(task.id);
+        // Use unified task card with focus mode callbacks
+        const taskCard = TaskCardFactory.createFocusTaskCard(task, {
+            onMarkDone: (taskId, element) => this.markDone(taskId, element)
+        });
         
-        // Get estimate in minutes
-        const estimateMinutes = this.getTaskEstimateMinutes(task);
-        const hasEstimate = estimateMinutes && estimateMinutes > 0;
-        
-        el.innerHTML = `
-            <div class="task-content">
-                <span class="task-title">${task.title}</span>
-                ${hasEstimate ? `<span class="task-time">⏱️ ${this.formatEstimateTime(estimateMinutes)}</span>` : ''}
-            </div>
-            <button class="done-btn" title="Done">✓</button>`;
-        el.querySelector('.done-btn').addEventListener('click', () => this.markDone(task.id, el));
-        return el;
+        return taskCard.getElement();
     }
     
     getTaskEstimateMinutes(task) {
