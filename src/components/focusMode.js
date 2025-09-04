@@ -200,6 +200,9 @@ export class FocusMode {
                             <div class="positive-time">0:00</div>
                         </div>
                     </div>
+                    <div class="global-progress">
+                        <div class="global-progress-fill" style="width:0%"></div>
+                    </div>
                     <div class="timer-controls">
                         <button class="t-start" title="Start">▶</button>
                         <button class="t-pause" title="Pause" style="display:none">⏸</button>
@@ -608,6 +611,11 @@ export class FocusMode {
         
         // Update progress bar
         progressFill.style.width = `${progressPercent}%`;
+        // Also update the global progress bar in the timer section
+        const globalFill = this.root.querySelector('.global-progress-fill');
+        if (globalFill) {
+            globalFill.style.width = `${progressPercent}%`;
+        }
         
         // Update countdown timer to show elapsed/remaining time (accurate to seconds)
         const remainingSeconds = Math.max(estimateSeconds - focusedSeconds, 0);
@@ -635,12 +643,15 @@ export class FocusMode {
         // Change color when time is up
         if (remainingSeconds <= 0) {
             progressFill.style.background = '#ef4444'; // Red when time is up
+            if (globalFill) globalFill.style.background = '#ef4444';
             countdown.style.color = '#ef4444';
         } else if (remainingSeconds <= estimateSeconds * 0.2) {
             progressFill.style.background = '#f59e0b'; // Orange when 20% time left
+            if (globalFill) globalFill.style.background = '#f59e0b';
             countdown.style.color = '#f59e0b';
         } else {
             progressFill.style.background = '#10b981'; // Green for normal progress
+            if (globalFill) globalFill.style.background = '#10b981';
             countdown.style.color = '#94a3b8';
         }
     }

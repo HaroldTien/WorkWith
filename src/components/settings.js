@@ -42,36 +42,9 @@ export class SettingsModal {
                 </div>
                 
                 <div class="settings-content">
-                    <!-- Appearance Section -->
-                    <div class="settings-section">
-                        <h3 class="settings-section-title">Appearance</h3>
-                        
-                        <div class="settings-option">
-                            <div>
-                                <div class="settings-option-label">Dark Theme</div>
-                                <div class="settings-option-description">Use dark theme for the application</div>
-                            </div>
-                            <div class="settings-option-control">
-                                <div class="toggle-switch ${this.settings.darkTheme ? 'active' : ''}" data-setting="darkTheme"></div>
-                            </div>
-                        </div>
-                        
-
-                    </div>
-                    
                     <!-- Task Management Section -->
                     <div class="settings-section">
                         <h3 class="settings-section-title">Task Management</h3>
-                        
-                        <div class="settings-option">
-                            <div>
-                                <div class="settings-option-label">Auto-save</div>
-                                <div class="settings-option-description">Automatically save changes to tasks</div>
-                            </div>
-                            <div class="settings-option-control">
-                                <div class="toggle-switch ${this.settings.autoSave ? 'active' : ''}" data-setting="autoSave"></div>
-                            </div>
-                        </div>
 
                         <div class="settings-option">
                             <div>
@@ -153,8 +126,6 @@ export class SettingsModal {
 
     getDefaultSettings() {
         return {
-            darkTheme: true,
-            autoSave: true,
             showPomodoroTimer: true
         };
     }
@@ -173,14 +144,7 @@ export class SettingsModal {
     }
 
     applySettings() {
-        // Apply dark theme
-        if (this.settings.darkTheme) {
-            document.body.classList.add('dark-theme');
-            document.body.classList.remove('light-theme');
-        } else {
-            document.body.classList.add('light-theme');
-            document.body.classList.remove('dark-theme');
-        }
+        // No visual theme settings to apply currently.
     }
 
 

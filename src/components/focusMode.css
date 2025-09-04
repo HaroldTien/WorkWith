@@ -55,22 +55,41 @@
 
 .focus-content {
     flex: 1;
-    overflow: auto;
+    /* Prevent the whole page from scrolling; we'll scroll inside the task list */
+    overflow: hidden;
     display: flex;
     flex-direction: column;
     gap: 12px;
     padding: 12px;
+    /* Hide scrollbar visually but keep wheel/trackpad scrolling */
+    -ms-overflow-style: none; /* IE/Edge */
+    scrollbar-width: none; /* Firefox */
+}
+
+/* Chrome/Safari scrollbar hide */
+.focus-content::-webkit-scrollbar {
+    display: none;
+}
+
+/* Prevent page-level scroll when focus mode is active */
+body.focus-mode-active {
+    overflow: hidden;
 }
 
 .focus-timer {
-    background: rgba(255, 255, 255, 0.06);
-    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: rgba(255, 255, 255, 0.14); /* less transparent */
+    border: 1px solid rgba(255, 255, 255, 0.22);
     border-radius: 10px;
     padding: 10px;
     text-align: center;
     margin-top: 2px;
     -webkit-app-region: drag;
-    position: relative;
+    /* Stick timer to top while scrolling */
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    /* Ensure sticky header looks solid over content */
+    backdrop-filter: blur(2px);
     transition: all 0.3s ease;
 }
 
@@ -113,6 +132,23 @@
     gap: 6px;
     margin-top: 4px;
     -webkit-app-region: no-drag;
+}
+
+/* Global progress bar under the timers */
+.global-progress {
+    width: 100%;
+    height: 4px;
+    background: rgba(148, 163, 184, 0.2);
+    border-radius: 3px;
+    overflow: hidden;
+    margin: 6px 0 2px 0;
+    display: none; /* hidden in full view */
+}
+.global-progress-fill {
+    height: 100%;
+    width: 0%;
+    background: #10b981;
+    transition: width 0.25s ease, background-color 0.25s ease;
 }
 
 .timer-controls button {
@@ -166,6 +202,11 @@
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 10px;
     padding: 12px;
+    /* Fixed height block under the timer */
+    height: 350px;
+    display: flex;
+    flex-direction: column;
+    min-height: 0; /* allow child overflow scroll in flexbox */
 }
 
 .focus-tasks h2 {
@@ -180,7 +221,13 @@
     display: flex;
     flex-direction: column;
     gap: 8px;
+    flex: 1; /* take up available height inside the block */
+    overflow: auto; /* scroll only the cards */
+    -ms-overflow-style: none; /* IE/Edge hide */
+    scrollbar-width: none; /* Firefox hide */
 }
+
+.focus-task-list::-webkit-scrollbar { display: none; }
 
 .no-tasks {
     color: #94a3b8;
@@ -306,6 +353,11 @@
     justify-content: center;
     align-items: center;
     box-sizing: border-box;
+}
+
+.focus-mode-container.minimal-mode .global-progress {
+    width: 90%;
+    display: block; /* only show in compressed window */
 }
 
 .focus-mode-container.minimal-mode .focus-tasks {

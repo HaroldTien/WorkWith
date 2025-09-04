@@ -71,10 +71,16 @@ ipcMain.on('focus-mode-resize', () => {
         __focusOriginalBounds = win.getBounds();
     }
 
-    const { workArea } = screen.getPrimaryDisplay();
-    const focusWidth = Math.round(workArea.width * 0.10);
+    // Position on the LEFT side of the SAME display as the current window
+    const currentBounds = win.getBounds();
+    const display = screen.getDisplayMatching(currentBounds) || screen.getPrimaryDisplay();
+    const { workArea } = display;
+
+   // Ensure focus mode has a minimum usable width regardless of monitor orientation
+   const MIN_FOCUS_WIDTH = 232; // Minimum width in pixels
+   const focusWidth = Math.max(Math.round(workArea.width * 0.10), MIN_FOCUS_WIDTH);
     const focusHeight = Math.round(workArea.height * 0.50);
-    const focusX = Math.round(workArea.x + (workArea.width - focusWidth) / 2);
+    const focusX = workArea.x; // left aligned on the same screen
     const focusY = workArea.y; // top aligned
 
     win.setBounds({ x: focusX, y: focusY, width: focusWidth, height: focusHeight });
@@ -167,33 +173,22 @@ ipcMain.on('minimal-mode-resize-at-position', (event, x, y) => {
 
 ipcMain.on('minimal-mode-restore', () => {
     const win = BrowserWindow.getFocusedWindow();
-    if (!win || !__minimalOriginalBounds || !__timerBlockPosition) return;
+    if (!win || !__minimalOriginalBounds) return;
 
-    // Remove move listener
+    // Remove move listener(s) added during minimal mode
     win.removeAllListeners('move');
 
-    // Calculate where the timer block was in the original window
-    // Assuming timer block is positioned at the top-left area of the original window
-    const originalTimerX = __minimalOriginalBounds.x + 12; // 12px padding from left
-    const originalTimerY = __minimalOriginalBounds.y + 50; // 50px from top (accounting for topbar)
-    
-    // Calculate the offset between original timer position and current timer position
-    const offsetX = __timerBlockPosition.x - originalTimerX;
-    const offsetY = __timerBlockPosition.y - originalTimerY;
-    
-    // Apply the offset to the original window position
-    const newX = __minimalOriginalBounds.x + offsetX;
-    const newY = __minimalOriginalBounds.y + offsetY;
-
-    win.setBounds({ 
-        x: newX, 
-        y: newY, 
-        width: __minimalOriginalBounds.width, 
-        height: __minimalOriginalBounds.height 
+    // Restore EXACT original bounds without applying extra offsets
+    win.setBounds({
+        x: __minimalOriginalBounds.x,
+        y: __minimalOriginalBounds.y,
+        width: __minimalOriginalBounds.width,
+        height: __minimalOriginalBounds.height
     });
     win.setResizable(true);
     win.setMaximizable(true);
     win.setFullScreenable(true);
+
     __minimalOriginalBounds = null;
     __timerBlockPosition = null;
 });

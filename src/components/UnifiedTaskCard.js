@@ -365,15 +365,48 @@ class BoardStrategy extends BaseStrategy {
         input.select();
         
         // Auto-format input
+        // Optimized input formatting and backspace handling for estimate input
+
+        // Helper function to format value as HH:MM
+        function formatEstimateInput(val) {
+            const digits = val.replace(/[^\d]/g, '').slice(0, 4);
+            if (digits.length === 0) return '';
+            if (digits.length <= 2) return digits;
+            return digits.slice(0, 2) + ':' + digits.slice(2);
+        }
+
         input.addEventListener('input', (e) => {
-            let value = e.target.value.replace(/[^\d]/g, '');
-            if (value.length >= 2) {
-                value = value.substring(0, 2) + ':' + value.substring(2, 4);
+            const formatted = formatEstimateInput(e.target.value);
+            e.target.value = formatted;
+        });
+
+        input.addEventListener('keydown', (e) => {
+            if (e.key !== 'Backspace') return;
+            const val = input.value;
+            const pos = input.selectionStart || 0;
+            // Caret just after the second hour digit (position 3, colon at index 2)
+            if (pos === 3 && val.charAt(2) === ':') {
+                e.preventDefault();
+                let digits = val.replace(/[^\d]/g, '');
+                if (digits.length >= 2) {
+                    digits = digits[0] + digits.slice(2); // remove second hour digit
+                } else {
+                    digits = '';
+                }
+                const newVal = formatEstimateInput(digits);
+                input.value = newVal;
+                const newPos = Math.min(1, newVal.replace(/[^\d]/g, '').length);
+                input.setSelectionRange(newPos, newPos);
             }
-            if (value.length > 5) {
-                value = value.substring(0, 5);
+            // Caret right before the colon (position 2, colon at index 2)
+            else if (pos === 2 && val.charAt(2) === ':') {
+                e.preventDefault();
+                let digits = val.replace(/[^\d]/g, '');
+                digits = digits.slice(1); // remove first hour digit
+                const newVal = formatEstimateInput(digits);
+                input.value = newVal;
+                input.setSelectionRange(0, 0);
             }
-            e.target.value = value;
         });
         
         // Save estimate function
