@@ -287,7 +287,7 @@ class BoardStrategy extends BaseStrategy {
         deleteSubtaskBtns.forEach(btn => {
             btn.addEventListener('click', (e) => {
                 e.stopPropagation();
-                const subtaskId = parseInt(btn.dataset.subtaskId);
+                const subtaskId = Number(btn.dataset.subtaskId);
                 if (callbacks.onDeleteSubtask) {
                     callbacks.onDeleteSubtask(this.getTaskId(element), subtaskId);
                 }

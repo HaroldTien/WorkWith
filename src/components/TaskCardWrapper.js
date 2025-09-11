@@ -100,12 +100,18 @@ export class TaskCardWrapper {
         // Focus on the input
         input.focus();
         
+        // Guard to prevent duplicate saves from click/blur/outside/enter
+        let isFinalized = false;
+
         // Save subtask function
         const saveSubtask = () => {
+            if (isFinalized) return;
+            isFinalized = true;
             const text = input.value.trim();
             if (text) {
                 // Generate unique ID for subtask
-                const subtaskId = Date.now() + Math.random();
+                // Generate an integer ID to avoid parseInt truncation issues elsewhere
+                const subtaskId = Date.now() + Math.floor(Math.random() * 100000);
                 
                 // Create new subtask
                 const newSubtask = {
@@ -132,12 +138,17 @@ export class TaskCardWrapper {
                 inputContainer.remove();
                 addSubtaskBtn.style.display = '';
             }
+            // Remove outside click listener after finalize
+            document.removeEventListener('click', handleClickOutside);
         };
         
         // Cancel function
         const cancelSubtask = () => {
+            if (isFinalized) return;
+            isFinalized = true;
             inputContainer.remove();
             addSubtaskBtn.style.display = '';
+            document.removeEventListener('click', handleClickOutside);
         };
         
         // Event listeners
@@ -165,7 +176,6 @@ export class TaskCardWrapper {
         const handleClickOutside = (e) => {
             if (!inputContainer.contains(e.target)) {
                 saveSubtask();
-                document.removeEventListener('click', handleClickOutside);
             }
         };
         
@@ -199,7 +209,15 @@ export class TaskCardWrapper {
     }
 
     handleDeleteSubtask(taskId, subtaskId) {
-        this.task.subtasks = this.task.subtasks.filter(s => s.id !== subtaskId);
+        // Remove subtask from the current task model
+        this.task.subtasks = (this.task.subtasks || []).filter(s => s.id !== subtaskId);
+
+        // Re-render the card to reflect the change and rebind events
+        if (this.unifiedCard) {
+            this.unifiedCard.updateTask(this.task);
+        }
+
+        // Persist the update upstream (saves to storage, etc.)
         if (this.onUpdateTask) {
             this.onUpdateTask(this.task);
         }
