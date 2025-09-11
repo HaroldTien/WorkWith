@@ -133,11 +133,21 @@ class FocusStrategy extends BaseStrategy {
     getHTML(task, callbacks) {
         const estimateMinutes = this.getTaskEstimateMinutes(task);
         const hasEstimate = estimateMinutes && estimateMinutes > 0;
+        const completedSubtasks = task.subtasks.filter(subtask => subtask.completed).length;
+        const totalSubtasks = task.subtasks.length;
         
         return `
             <div class="task-content">
                 <span class="task-title">${task.title}</span>
                 ${hasEstimate ? `<span class="task-time">⏱️ ${this.formatEstimateTime(estimateMinutes)}</span>` : ''}
+                ${totalSubtasks > 0 ? `
+                    <div class="focus-subtasks">
+                        <div class="subtask-progress">${completedSubtasks}/${totalSubtasks} subtasks</div>
+                        <div class="focus-subtask-list">
+                            ${this.getFocusSubtasksHTML(task)}
+                        </div>
+                    </div>
+                ` : ''}
             </div>
             <button class="done-btn" title="Done">✓</button>`;
     }
@@ -150,6 +160,30 @@ class FocusStrategy extends BaseStrategy {
                 callbacks.onMarkDone(this.getTaskId(element), element);
             });
         }
+
+        // Subtask checkbox events
+        const subtaskCheckboxes = element.querySelectorAll('.subtask-checkbox');
+        subtaskCheckboxes.forEach(checkbox => {
+            checkbox.addEventListener('change', (e) => {
+                e.stopPropagation();
+                const subtaskId = parseInt(e.target.closest('.focus-subtask-item').dataset.subtaskId);
+                if (callbacks.onToggleSubtask) {
+                    callbacks.onToggleSubtask(this.getTaskId(element), subtaskId);
+                }
+            });
+        });
+
+        // Delete subtask events
+        const deleteSubtaskBtns = element.querySelectorAll('.delete-subtask-btn');
+        deleteSubtaskBtns.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const subtaskId = Number(btn.dataset.subtaskId);
+                if (callbacks.onDeleteSubtask) {
+                    callbacks.onDeleteSubtask(this.getTaskId(element), subtaskId);
+                }
+            });
+        });
     }
     
     getTaskEstimateMinutes(task) {
@@ -177,6 +211,23 @@ class FocusStrategy extends BaseStrategy {
     
     getTaskId(element) {
         return parseInt(element.dataset.taskId);
+    }
+    
+    getFocusSubtasksHTML(task) {
+        return task.subtasks.map(subtask => `
+            <div class="focus-subtask-item ${subtask.completed ? 'completed' : ''}" data-subtask-id="${subtask.id}">
+                <input type="checkbox" class="subtask-checkbox" ${subtask.completed ? 'checked' : ''}>
+                <span class="subtask-text">${subtask.text}</span>
+                <button class="delete-subtask-btn" data-subtask-id="${subtask.id}" title="Delete subtask">
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="3,6 5,6 21,6"></polyline>
+                        <path d="m19,6v14a2,2 0 0,1-2,2H7a2,2 0 0,1-2-2V6m3,0V4a2,2 0 0,1,2-2h4a2,2 0 0,1,2,2v2"></path>
+                        <line x1="10" y1="11" x2="10" y2="17"></line>
+                        <line x1="14" y1="11" x2="14" y2="17"></line>
+                    </svg>
+                </button>
+            </div>
+        `).join('');
     }
 }
 

@@ -324,6 +324,78 @@ body.focus-mode-active {
     cursor: pointer;
 }
 
+/* Focus Mode Subtasks - Use same styling as task board but with hover visibility */
+.focus-subtasks {
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    opacity: 0;
+    max-height: 0;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.focus-task-item:hover .focus-subtasks {
+    opacity: 1;
+    max-height: 200px;
+}
+
+.focus-subtask-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.focus-subtask-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 0;
+    transition: all 0.2s ease;
+}
+
+.focus-subtask-item.completed {
+    opacity: 0.6;
+}
+
+.focus-subtask-item.completed .subtask-text {
+    text-decoration: line-through;
+    color: #9CA3AF;
+}
+
+.focus-subtask-item .subtask-text {
+    color: #E5E7EB;
+    font-size: 12px;
+    flex: 1;
+    line-height: 1.3;
+}
+
+.focus-subtask-item .delete-subtask-btn {
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.2);
+    color: #EF4444;
+    padding: 2px;
+    border-radius: 3px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 16px;
+    opacity: 0;
+}
+
+.focus-subtask-item:hover .delete-subtask-btn {
+    opacity: 1;
+}
+
+.focus-subtask-item .delete-subtask-btn:hover {
+    background: rgba(239, 68, 68, 0.2);
+    border-color: rgba(239, 68, 68, 0.4);
+    transform: scale(1.1);
+}
+
 /* Minimal mode styles - window shrunk to timer block size */
 .focus-mode-container.minimal-mode {
     justify-content: center;
