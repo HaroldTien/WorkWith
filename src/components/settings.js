@@ -56,6 +56,45 @@ export class SettingsModal {
                             </div>
                         </div>
                     </div>
+
+                    <!-- Notion Integration Section -->
+                    <div class="settings-section">
+                        <h3 class="settings-section-title">Notion Integration</h3>
+
+                        <div class="settings-option">
+                            <div>
+                                <div class="settings-option-label">Sync with Notion Database</div>
+                                <div class="settings-option-description">Enable two-way synchronization with your Notion database</div>
+                            </div>
+                            <div class="settings-option-control">
+                                <div class="toggle-switch ${this.settings.notionSyncEnabled ? 'active' : ''}" data-setting="notionSyncEnabled"></div>
+                            </div>
+                        </div>
+
+                        <div class="settings-option notion-token-option" style="display: ${this.settings.notionSyncEnabled ? 'flex' : 'none'}">
+                            <div>
+                                <div class="settings-option-label">Notion Integration Token</div>
+                                <div class="settings-option-description">
+                                    Paste your Notion internal integration secret here. 
+                                    <a href="https://developers.notion.com/docs/getting-started" target="_blank" class="settings-link">How to get your token?</a>
+                                </div>
+                            </div>
+                            <div class="settings-option-control">
+                                <input 
+                                    type="password" 
+                                    class="settings-input" 
+                                    placeholder="secret_..." 
+                                    data-setting="notionApiKey"
+                                    value="${this.settings.notionApiKey || ''}"
+                                />
+                                <button class="settings-btn secondary" id="testNotionConnectionBtn" ${!this.settings.notionApiKey ? 'disabled' : ''}>
+                                    <span class="connection-status-dot ${this.settings.notionConnectionTested ? 'connected' : ''}"></span>
+                                    Test Connection
+                                </button>
+                            </div>
+                        </div>
+
+                    </div>
                     
 
                 </div>
@@ -94,6 +133,11 @@ export class SettingsModal {
                 const setting = toggle.dataset.setting;
                 this.settings[setting] = !this.settings[setting];
                 toggle.classList.toggle('active');
+                
+                // Handle special cases for Notion integration
+                if (setting === 'notionSyncEnabled') {
+                    this.handleNotionSyncToggle();
+                }
             });
         });
         
@@ -105,6 +149,20 @@ export class SettingsModal {
                 this.settings[setting] = e.target.value;
             });
         });
+
+        // Input fields
+        const inputs = this.element.querySelectorAll('.settings-input');
+        inputs.forEach(input => {
+            input.addEventListener('input', (e) => {
+                const setting = e.target.dataset.setting;
+                this.settings[setting] = e.target.value;
+                
+                // Handle special cases for Notion integration
+                if (setting === 'notionApiKey') {
+                    this.handleNotionApiKeyChange();
+                }
+            });
+        });
         
         // Action buttons
         const resetBtn = this.element.querySelector('#resetSettingsBtn');
@@ -112,6 +170,13 @@ export class SettingsModal {
         
         resetBtn.addEventListener('click', () => this.resetSettings());
         saveBtn.addEventListener('click', () => this.saveSettings());
+
+        // Notion connection test button
+        const testConnectionBtn = this.element.querySelector('#testNotionConnectionBtn');
+        if (testConnectionBtn) {
+            testConnectionBtn.addEventListener('click', () => this.testNotionConnection());
+        }
+
     }
 
     loadSettings() {
@@ -126,7 +191,10 @@ export class SettingsModal {
 
     getDefaultSettings() {
         return {
-            showPomodoroTimer: true
+            showPomodoroTimer: true,
+            notionSyncEnabled: false,
+            notionApiKey: '',
+            notionConnectionTested: false
         };
     }
 
@@ -175,7 +243,173 @@ export class SettingsModal {
                 select.value = this.settings[key];
             }
         });
+
+        // Update input fields
+        Object.keys(this.settings).forEach(key => {
+            const input = this.element.querySelector(`[data-setting="${key}"]`);
+            if (input && input.tagName === 'INPUT') {
+                input.value = this.settings[key] || '';
+            }
+        });
+
+        // Update Notion integration visibility
+        this.updateNotionIntegrationVisibility();
+        
+        // Update save button visibility
+        this.updateSaveButtonVisibility();
     }
+
+    handleNotionSyncToggle() {
+        // Show/hide Notion integration options based on toggle state
+        // 根據切換狀態顯示/隱藏 Notion 整合選項
+        this.updateNotionIntegrationVisibility();
+        
+        // If disabling sync, clear related settings
+        // 如果禁用同步，清除相關設置
+        if (!this.settings.notionSyncEnabled) {
+            this.settings.notionApiKey = '';
+            this.settings.notionConnectionTested = false;
+            this.updateUI();
+            this.updateConnectionStatusDot(false);
+        }
+        
+        // Update save button visibility
+        // 更新保存按鈕可見性
+        this.updateSaveButtonVisibility();
+    }
+
+    handleNotionApiKeyChange() {
+        // Update database selection visibility when API key changes
+        // 當 API 密鑰更改時更新資料庫選擇可見性
+        this.updateNotionIntegrationVisibility();
+        
+        // Reset connection test status when API key changes
+        // 當 API 密鑰更改時重置連接測試狀態
+        this.settings.notionConnectionTested = false;
+        
+        // Update save button visibility and connection status dot
+        // 更新保存按鈕可見性和連接狀態點
+        this.updateSaveButtonVisibility();
+        this.updateConnectionStatusDot(false);
+    }
+
+    updateNotionIntegrationVisibility() {
+        // Show/hide Notion integration options based on current settings
+        // 根據當前設置顯示/隱藏 Notion 整合選項
+        
+        const tokenOption = this.element.querySelector('.notion-token-option');
+        
+        if (tokenOption) {
+            tokenOption.style.display = this.settings.notionSyncEnabled ? 'flex' : 'none';
+        }
+
+        // Update test connection button state
+        // 更新測試連接按鈕狀態
+        const testBtn = this.element.querySelector('#testNotionConnectionBtn');
+        if (testBtn) {
+            testBtn.disabled = !this.settings.notionApiKey;
+        }
+    }
+
+    updateConnectionStatusDot(isConnected) {
+        // Update the connection status dot on the test button
+        // 更新測試按鈕上的連接狀態點
+        
+        const statusDot = this.element.querySelector('.connection-status-dot');
+        console.log('🔧 updateConnectionStatusDot called with isConnected:', isConnected);
+        console.log('🔧 Found status dot element:', statusDot);
+        
+        if (statusDot) {
+            if (isConnected) {
+                statusDot.classList.add('connected');
+                console.log('🔧 Connection status dot set to connected (green)');
+                console.log('🔧 Status dot classes after update:', statusDot.className);
+            } else {
+                statusDot.classList.remove('connected');
+                console.log('🔧 Connection status dot set to disconnected (gray)');
+                console.log('🔧 Status dot classes after update:', statusDot.className);
+            }
+        } else {
+            console.log('🔧 Warning: Connection status dot element not found');
+        }
+    }
+
+    updateSaveButtonVisibility() {
+        // Show/hide save button based on Notion sync status and connection test
+        // 根據 Notion 同步狀態和連接測試顯示/隱藏保存按鈕
+        
+        const saveBtn = this.element.querySelector('#saveSettingsBtn');
+        if (saveBtn) {
+            // Hide save button if Notion sync is enabled but connection hasn't been tested
+            // 如果啟用了 Notion 同步但尚未測試連接，則隱藏保存按鈕
+            if (this.settings.notionSyncEnabled && !this.settings.notionConnectionTested) {
+                saveBtn.style.display = 'none';
+                console.log('🔧 Hiding save button - Notion sync enabled but connection not tested');
+            } else {
+                saveBtn.style.display = 'block';
+                console.log('🔧 Showing save button - Notion sync disabled or connection tested');
+            }
+        }
+    }
+
+    async testNotionConnection() {
+        // Test the Notion API connection using the provided secret
+        // 使用提供的密鑰測試 Notion API 連接
+        
+        const testBtn = this.element.querySelector('#testNotionConnectionBtn');
+        
+        try {
+            // Show loading state on the button
+            // 在按鈕上顯示加載狀態
+            testBtn.textContent = 'Testing...';
+            testBtn.disabled = true;
+            
+            // Call the main process to test the connection
+            // 調用主進程來測試連接
+            const result = await window.electronAPI.notionAPI.testNotionConnection(this.settings.notionApiKey);
+            
+            if (result.success) {
+                // Connection successful - show success message and enable save button
+                // 連接成功 - 顯示成功消息並啟用保存按鈕
+                console.log('🔧 Connection test successful, setting notionConnectionTested = true');
+                this.settings.notionConnectionTested = true;
+                this.updateSaveButtonVisibility();
+                // Add small delay to ensure DOM is updated
+                setTimeout(() => {
+                    this.updateConnectionStatusDot(true);
+                }, 100);
+                this.showSuccessMessage(`Connection successful! Found ${result.databaseCount} accessible database(s).`);
+            } else {
+                // Connection failed - show error message and keep save button hidden
+                // 連接失敗 - 顯示錯誤消息並保持保存按鈕隱藏
+                console.log('🔧 Connection test failed, setting notionConnectionTested = false');
+                this.settings.notionConnectionTested = false;
+                this.updateSaveButtonVisibility();
+                setTimeout(() => {
+                    this.updateConnectionStatusDot(false);
+                }, 100);
+                this.showErrorMessage(`Connection failed: ${result.error}`);
+            }
+            
+        } catch (error) {
+            // Handle unexpected errors
+            // 處理意外錯誤
+            console.error('Notion connection test failed:', error);
+            this.settings.notionConnectionTested = false;
+            this.updateSaveButtonVisibility();
+            setTimeout(() => {
+                this.updateConnectionStatusDot(false);
+            }, 100);
+            this.showErrorMessage('Connection test failed. Please try again.');
+            
+        } finally {
+            // Reset button state regardless of success or failure
+            // 無論成功或失敗都重置按鈕狀態
+            testBtn.textContent = 'Test Connection';
+            testBtn.disabled = false;
+        }
+    }
+
 
     showSuccessMessage(message) {
         this.showMessage(message, 'success');

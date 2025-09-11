@@ -577,6 +577,11 @@ export class FocusMode {
         } else {
             this.currentTaskId = null;
         }
+        
+        // Update minimal mode title if in minimal mode
+        if (this.isMinimalMode) {
+            this.updateMinimalModeTaskTitle();
+        }
     }
     
     // Update progress bar and countdown timer for ongoing task only
@@ -671,6 +676,9 @@ export class FocusMode {
             tasksSection.style.display = 'none';
             topbar.style.display = 'none';
             
+            // Add current task title to minimal mode
+            this.updateMinimalModeTaskTitle();
+            
             // Get timer block position relative to current window
             const timerRect = timerBlock.getBoundingClientRect();
             
@@ -691,6 +699,12 @@ export class FocusMode {
             tasksSection.style.display = '';
             topbar.style.display = '';
             
+            // Remove current task title from minimal mode
+            const existingTitle = timerBlock.querySelector('.current-task-title');
+            if (existingTitle) {
+                existingTitle.remove();
+            }
+            
             // Restore Electron window to original size
             if (window.electronAPI && window.electronAPI.minimalMode) {
                 window.electronAPI.minimalMode.restoreWindow();
@@ -703,6 +717,33 @@ export class FocusMode {
             `;
             compressBtn.title = 'Minimize to Timer Only';
         }
+    }
+
+    // Update current task title in minimal mode
+    updateMinimalModeTaskTitle() {
+        if (!this.isMinimalMode) return;
+        
+        const timerBlock = this.root.querySelector('.focus-timer');
+        if (!timerBlock) return;
+        
+        // Remove existing title if any
+        const existingTitle = timerBlock.querySelector('.current-task-title');
+        if (existingTitle) {
+            existingTitle.remove();
+        }
+        
+        // Get current ongoing task
+        const ongoingTask = this.root.querySelector('.focus-task-item.current-ongoing');
+        if (!ongoingTask) return;
+        
+        const taskTitle = ongoingTask.querySelector('.task-title');
+        if (!taskTitle) return;
+        
+        // Create and add current task title
+        const titleElement = document.createElement('div');
+        titleElement.className = 'current-task-title';
+        titleElement.textContent = taskTitle.textContent;
+        timerBlock.appendChild(titleElement);
     }
 }
 

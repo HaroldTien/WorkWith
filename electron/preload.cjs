@@ -23,6 +23,11 @@ contextBridge.exposeInMainWorld('electronAPI', {
     resizeWindowAtPosition: (x, y) => ipcRenderer.send('minimal-mode-resize-at-position', x, y),
     restoreWindow: () => ipcRenderer.send('minimal-mode-restore'),
   },
+  notionAPI: {
+    // Test Notion API connection by passing API key to main process
+    // 通過將 API 密鑰傳遞給主進程來測試 Notion API 連接
+    testNotionConnection: (apiKey) => ipcRenderer.invoke('notion-test-connection', apiKey),
+  },
 });
 
 console.log('🔧 Preload (CJS) loaded');

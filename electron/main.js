@@ -1,6 +1,7 @@
 import { app, BrowserWindow, ipcMain, screen } from 'electron';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
+import NotionAPIService from '../service/notionAPIService.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -208,6 +209,71 @@ app.whenReady().then(() => {
 app.on('window-all-closed', () => {
     if (process.platform !== 'darwin') {
         app.quit();
+    }
+});
+
+// Notion API IPC handlers
+// 處理 Notion API 的 IPC 處理器
+
+// Test Notion API connection
+// 測試 Notion API 連接
+ipcMain.handle('notion-test-connection', async (event, apiKey) => {
+    console.log('🔧 Notion test connection handler called with API key:', apiKey ? '***' + apiKey.slice(-4) : 'none');
+    try {
+        // Validate that API key is provided
+        // 驗證是否提供了 API 密鑰
+        if (!apiKey || typeof apiKey !== 'string' || apiKey.trim() === '') {
+            return {
+                success: false,
+                error: 'API key is required'
+            };
+        }
+
+        // Create a new instance of NotionAPIService
+        // 創建 NotionAPIService 的新實例
+        const notionService = new NotionAPIService();
+        
+        // Set the API key for authentication
+        // 設置用於身份驗證的 API 密鑰
+        notionService.setApiKey(apiKey.trim());
+
+        // Test the connection by searching for databases
+        // 通過搜尋資料庫來測試連接
+        const databases = await notionService.searchDatabases();
+
+        // Connection successful - return success result with database count
+        // 連接成功 - 返回帶有資料庫數量的成功結果
+        return {
+            success: true,
+            databaseCount: databases.length,
+            message: `Successfully connected to Notion API. Found ${databases.length} accessible database(s).`
+        };
+
+    } catch (error) {
+        // Connection failed - return error result
+        // 連接失敗 - 返回錯誤結果
+        console.error('Notion connection test failed:', error);
+        
+        // Parse the error message to provide user-friendly feedback
+        // 解析錯誤消息以提供用戶友好的反饋
+        let errorMessage = 'Connection failed';
+        
+        if (error.message.includes('401') || error.message.includes('Unauthorized')) {
+            errorMessage = 'Invalid API key. Please check your integration token.';
+        } else if (error.message.includes('403') || error.message.includes('Forbidden')) {
+            errorMessage = 'API key doesn\'t have required permissions.';
+        } else if (error.message.includes('404') || error.message.includes('Not Found')) {
+            errorMessage = 'Notion API endpoint not found.';
+        } else if (error.message.includes('network') || error.message.includes('fetch')) {
+            errorMessage = 'Network error. Please check your internet connection.';
+        } else {
+            errorMessage = error.message;
+        }
+
+        return {
+            success: false,
+            error: errorMessage
+        };
     }
 });
 
