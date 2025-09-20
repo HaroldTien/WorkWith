@@ -9,13 +9,26 @@ export default defineConfig({
     build: {
         outDir: 'dist',
         emptyOutDir: true,
+        assetsDir: 'assets',
         rollupOptions: {
             input: {
                 main: resolve(__dirname, 'index.html')
             },
             output: {
                 // Electron apps don't need code splitting
-                manualChunks: undefined
+                manualChunks: undefined,
+                // Ensure CSS files are properly bundled
+                assetFileNames: (assetInfo) => {
+                    const info = assetInfo.name.split('.');
+                    const ext = info[info.length - 1];
+                    if (/\.(css)$/.test(assetInfo.name)) {
+                        return `css/[name]-[hash][extname]`;
+                    }
+                    if (/\.(png|jpe?g|svg|gif|tiff|bmp|ico)$/i.test(assetInfo.name)) {
+                        return `images/[name]-[hash][extname]`;
+                    }
+                    return `assets/[name]-[hash][extname]`;
+                }
             }
         }
     },
@@ -37,7 +50,11 @@ export default defineConfig({
     
     // CSS configuration
     css: {
-        devSourcemap: true
+        devSourcemap: true,
+        // Ensure CSS is properly processed
+        postcss: {
+            plugins: []
+        }
     },
     
     // Plugin configuration
@@ -56,5 +73,8 @@ export default defineConfig({
     // Electron-specific optimizations
     optimizeDeps: {
         exclude: ['electron']
-    }
+    },
+    
+    // Public directory for static assets
+    publicDir: 'assets'
 });

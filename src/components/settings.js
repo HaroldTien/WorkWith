@@ -2,7 +2,8 @@
 export class SettingsModal {
     constructor() {
         this.isVisible = false;
-        this.settings = this.loadSettings();
+        this.savedSettings = this.loadSettings();
+        this.workingSettings = JSON.parse(JSON.stringify(this.savedSettings)); // Working copy
         this.element = null;
         this.loadStyles();
         this.createModal();
@@ -52,7 +53,39 @@ export class SettingsModal {
                                 <div class="settings-option-description">Show the Pomodoro timer inside Focus Mode</div>
                             </div>
                             <div class="settings-option-control">
-                                <div class="toggle-switch ${this.settings.showPomodoroTimer ? 'active' : ''}" data-setting="showPomodoroTimer"></div>
+                                <div class="toggle-switch ${this.workingSettings.showPomodoroTimer ? 'active' : ''}" data-setting="showPomodoroTimer"></div>
+                            </div>
+                        </div>
+
+                        <div class="settings-option pomodoro-time-options" style="display: ${this.workingSettings.showPomodoroTimer ? 'flex' : 'none'}">
+                            <div>
+                                <div class="settings-option-label">Working Time</div>
+                                <div class="settings-option-description">Duration for focused work sessions</div>
+                            </div>
+                            <div class="settings-option-control">
+                                <input 
+                                    type="text" 
+                                    class="settings-input time-input" 
+                                    placeholder="25:00" 
+                                    data-setting="pomodoroWorkTime"
+                                    value="${this.workingSettings.pomodoroWorkTime || '25:00'}"
+                                />
+                            </div>
+                        </div>
+
+                        <div class="settings-option pomodoro-time-options" style="display: ${this.workingSettings.showPomodoroTimer ? 'flex' : 'none'}">
+                            <div>
+                                <div class="settings-option-label">Rest Time</div>
+                                <div class="settings-option-description">Duration for break sessions</div>
+                            </div>
+                            <div class="settings-option-control">
+                                <input 
+                                    type="text" 
+                                    class="settings-input time-input" 
+                                    placeholder="5:00" 
+                                    data-setting="pomodoroRestTime"
+                                    value="${this.workingSettings.pomodoroRestTime || '5:00'}"
+                                />
                             </div>
                         </div>
                     </div>
@@ -67,11 +100,11 @@ export class SettingsModal {
                                 <div class="settings-option-description">Enable two-way synchronization with your Notion database</div>
                             </div>
                             <div class="settings-option-control">
-                                <div class="toggle-switch ${this.settings.notionSyncEnabled ? 'active' : ''}" data-setting="notionSyncEnabled"></div>
+                                <div class="toggle-switch ${this.workingSettings.notionSyncEnabled ? 'active' : ''}" data-setting="notionSyncEnabled"></div>
                             </div>
                         </div>
 
-                        <div class="settings-option notion-token-option" style="display: ${this.settings.notionSyncEnabled ? 'flex' : 'none'}">
+                        <div class="settings-option notion-token-option" style="display: ${this.workingSettings.notionSyncEnabled ? 'flex' : 'none'}">
                             <div>
                                 <div class="settings-option-label">Notion Integration Token</div>
                                 <div class="settings-option-description">
@@ -85,10 +118,10 @@ export class SettingsModal {
                                     class="settings-input" 
                                     placeholder="secret_..." 
                                     data-setting="notionApiKey"
-                                    value="${this.settings.notionApiKey || ''}"
+                                    value="${this.workingSettings.notionApiKey || ''}"
                                 />
-                                <button class="settings-btn secondary" id="testNotionConnectionBtn" ${!this.settings.notionApiKey ? 'disabled' : ''}>
-                                    <span class="connection-status-dot ${this.settings.notionConnectionTested ? 'connected' : ''}"></span>
+                                <button class="settings-btn secondary" id="testNotionConnectionBtn" ${!this.workingSettings.notionApiKey ? 'disabled' : ''}>
+                                    <span class="connection-status-dot ${this.workingSettings.notionConnectionTested ? 'connected' : ''}"></span>
                                     Test Connection
                                 </button>
                             </div>
@@ -131,12 +164,17 @@ export class SettingsModal {
         toggleSwitches.forEach(toggle => {
             toggle.addEventListener('click', () => {
                 const setting = toggle.dataset.setting;
-                this.settings[setting] = !this.settings[setting];
+                this.workingSettings[setting] = !this.workingSettings[setting];
                 toggle.classList.toggle('active');
                 
                 // Handle special cases for Notion integration
                 if (setting === 'notionSyncEnabled') {
                     this.handleNotionSyncToggle();
+                }
+                
+                // Handle special cases for Pomodoro timer
+                if (setting === 'showPomodoroTimer') {
+                    this.handlePomodoroTimerToggle();
                 }
             });
         });
@@ -146,7 +184,7 @@ export class SettingsModal {
         selects.forEach(select => {
             select.addEventListener('change', (e) => {
                 const setting = e.target.dataset.setting;
-                this.settings[setting] = e.target.value;
+                this.workingSettings[setting] = e.target.value;
             });
         });
 
@@ -155,7 +193,19 @@ export class SettingsModal {
         inputs.forEach(input => {
             input.addEventListener('input', (e) => {
                 const setting = e.target.dataset.setting;
-                this.settings[setting] = e.target.value;
+                
+                // Validate time format for Pomodoro settings
+                if (setting === 'pomodoroWorkTime' || setting === 'pomodoroRestTime') {
+                    if (this.validateTimeFormat(e.target.value)) {
+                        this.workingSettings[setting] = e.target.value;
+                        e.target.classList.remove('error');
+                    } else {
+                        e.target.classList.add('error');
+                        return; // Don't save invalid time
+                    }
+                } else {
+                    this.workingSettings[setting] = e.target.value;
+                }
                 
                 // Handle special cases for Notion integration
                 if (setting === 'notionApiKey') {
@@ -192,6 +242,8 @@ export class SettingsModal {
     getDefaultSettings() {
         return {
             showPomodoroTimer: true,
+            pomodoroWorkTime: '25:00',
+            pomodoroRestTime: '5:00',
             notionSyncEnabled: false,
             notionApiKey: '',
             notionConnectionTested: false
@@ -200,11 +252,13 @@ export class SettingsModal {
 
     saveSettings() {
         try {
-            localStorage.setItem('workwith-settings', JSON.stringify(this.settings));
+            // Copy working settings to saved settings
+            this.savedSettings = JSON.parse(JSON.stringify(this.workingSettings));
+            localStorage.setItem('workwith-settings', JSON.stringify(this.savedSettings));
             this.showSuccessMessage('Settings saved successfully!');
             this.applySettings();
             // Notify app of settings changes
-            document.dispatchEvent(new CustomEvent('settingsChanged', { detail: this.settings }));
+            document.dispatchEvent(new CustomEvent('settingsChanged', { detail: this.savedSettings }));
         } catch (error) {
             console.error('Failed to save settings:', error);
             this.showErrorMessage('Failed to save settings');
@@ -221,7 +275,8 @@ export class SettingsModal {
 
     resetSettings() {
         if (confirm('Are you sure you want to reset all settings to default values?')) {
-            this.settings = this.getDefaultSettings();
+            this.workingSettings = this.getDefaultSettings();
+            this.savedSettings = JSON.parse(JSON.stringify(this.workingSettings));
             this.updateUI();
             this.showSuccessMessage('Settings reset to defaults!');
         }
@@ -229,34 +284,40 @@ export class SettingsModal {
 
     updateUI() {
         // Update toggle switches
-        Object.keys(this.settings).forEach(key => {
+        Object.keys(this.workingSettings).forEach(key => {
             const toggle = this.element.querySelector(`[data-setting="${key}"]`);
             if (toggle && toggle.classList.contains('toggle-switch')) {
-                toggle.classList.toggle('active', this.settings[key]);
+                toggle.classList.toggle('active', this.workingSettings[key]);
             }
         });
         
         // Update selects
-        Object.keys(this.settings).forEach(key => {
+        Object.keys(this.workingSettings).forEach(key => {
             const select = this.element.querySelector(`[data-setting="${key}"]`);
             if (select && select.tagName === 'SELECT') {
-                select.value = this.settings[key];
+                select.value = this.workingSettings[key];
             }
         });
 
         // Update input fields
-        Object.keys(this.settings).forEach(key => {
+        Object.keys(this.workingSettings).forEach(key => {
             const input = this.element.querySelector(`[data-setting="${key}"]`);
             if (input && input.tagName === 'INPUT') {
-                input.value = this.settings[key] || '';
+                input.value = this.workingSettings[key] || '';
             }
         });
 
         // Update Notion integration visibility
         this.updateNotionIntegrationVisibility();
         
+        // Update Pomodoro time options visibility
+        this.updatePomodoroTimeVisibility();
+        
         // Update save button visibility
         this.updateSaveButtonVisibility();
+        
+        // Update connection status dot
+        this.updateConnectionStatusDot(this.workingSettings.notionConnectionTested);
     }
 
     handleNotionSyncToggle() {
@@ -264,18 +325,32 @@ export class SettingsModal {
         // 根據切換狀態顯示/隱藏 Notion 整合選項
         this.updateNotionIntegrationVisibility();
         
-        // If disabling sync, clear related settings
-        // 如果禁用同步，清除相關設置
-        if (!this.settings.notionSyncEnabled) {
-            this.settings.notionApiKey = '';
-            this.settings.notionConnectionTested = false;
-            this.updateUI();
-            this.updateConnectionStatusDot(false);
-        }
+        // Note: We do NOT clear the token when disabling sync to preserve user input
+        // 注意：我們在禁用同步時不清除令牌以保留用戶輸入
         
         // Update save button visibility
         // 更新保存按鈕可見性
         this.updateSaveButtonVisibility();
+    }
+
+    handlePomodoroTimerToggle() {
+        // Show/hide Pomodoro time options based on toggle state
+        this.updatePomodoroTimeVisibility();
+    }
+
+    validateTimeFormat(timeString) {
+        // Validate MM:SS format
+        const timeRegex = /^([0-5]?\d):([0-5]\d)$/;
+        return timeRegex.test(timeString);
+    }
+
+    updatePomodoroTimeVisibility() {
+        // Show/hide Pomodoro time options based on current settings
+        const timeOptions = this.element.querySelectorAll('.pomodoro-time-options');
+        
+        timeOptions.forEach(option => {
+            option.style.display = this.workingSettings.showPomodoroTimer ? 'flex' : 'none';
+        });
     }
 
     handleNotionApiKeyChange() {
@@ -285,7 +360,7 @@ export class SettingsModal {
         
         // Reset connection test status when API key changes
         // 當 API 密鑰更改時重置連接測試狀態
-        this.settings.notionConnectionTested = false;
+        this.workingSettings.notionConnectionTested = false;
         
         // Update save button visibility and connection status dot
         // 更新保存按鈕可見性和連接狀態點
@@ -300,14 +375,16 @@ export class SettingsModal {
         const tokenOption = this.element.querySelector('.notion-token-option');
         
         if (tokenOption) {
-            tokenOption.style.display = this.settings.notionSyncEnabled ? 'flex' : 'none';
+            tokenOption.style.display = this.workingSettings.notionSyncEnabled ? 'flex' : 'none';
         }
 
         // Update test connection button state
         // 更新測試連接按鈕狀態
         const testBtn = this.element.querySelector('#testNotionConnectionBtn');
         if (testBtn) {
-            testBtn.disabled = !this.settings.notionApiKey;
+            testBtn.disabled = !this.workingSettings.notionApiKey;
+            // Ensure status dot is always correct
+            testBtn.innerHTML = `<span class="connection-status-dot ${this.workingSettings.notionConnectionTested ? 'connected' : ''}"></span>Test Connection`;
         }
     }
 
@@ -315,23 +392,17 @@ export class SettingsModal {
         // Update the connection status dot on the test button
         // 更新測試按鈕上的連接狀態點
         
-        const statusDot = this.element.querySelector('.connection-status-dot');
-        console.log('🔧 updateConnectionStatusDot called with isConnected:', isConnected);
-        console.log('🔧 Found status dot element:', statusDot);
-        
-        if (statusDot) {
-            if (isConnected) {
-                statusDot.classList.add('connected');
-                console.log('🔧 Connection status dot set to connected (green)');
-                console.log('🔧 Status dot classes after update:', statusDot.className);
-            } else {
-                statusDot.classList.remove('connected');
-                console.log('🔧 Connection status dot set to disconnected (gray)');
-                console.log('🔧 Status dot classes after update:', statusDot.className);
-            }
-        } else {
-            console.log('🔧 Warning: Connection status dot element not found');
+        const testBtn = this.element.querySelector('#testNotionConnectionBtn');
+        if (!testBtn) {
+            console.log('🔧 Warning: Test connection button not found');
+            return;
         }
+        
+        // Update the button's innerHTML to ensure status dot is correct
+        testBtn.innerHTML = `<span class="connection-status-dot ${isConnected ? 'connected' : ''}"></span>Test Connection`;
+        
+        console.log('🔧 updateConnectionStatusDot called with isConnected:', isConnected);
+        console.log('🔧 Button innerHTML updated');
     }
 
     updateSaveButtonVisibility() {
@@ -342,7 +413,7 @@ export class SettingsModal {
         if (saveBtn) {
             // Hide save button if Notion sync is enabled but connection hasn't been tested
             // 如果啟用了 Notion 同步但尚未測試連接，則隱藏保存按鈕
-            if (this.settings.notionSyncEnabled && !this.settings.notionConnectionTested) {
+            if (this.workingSettings.notionSyncEnabled && !this.workingSettings.notionConnectionTested) {
                 saveBtn.style.display = 'none';
                 console.log('🔧 Hiding save button - Notion sync enabled but connection not tested');
             } else {
@@ -366,28 +437,23 @@ export class SettingsModal {
             
             // Call the main process to test the connection
             // 調用主進程來測試連接
-            const result = await window.electronAPI.notionAPI.testNotionConnection(this.settings.notionApiKey);
+            const result = await window.electronAPI.notionAPI.testNotionConnection(this.workingSettings.notionApiKey);
             
             if (result.success) {
                 // Connection successful - show success message and enable save button
                 // 連接成功 - 顯示成功消息並啟用保存按鈕
                 console.log('🔧 Connection test successful, setting notionConnectionTested = true');
-                this.settings.notionConnectionTested = true;
+                this.workingSettings.notionConnectionTested = true;
                 this.updateSaveButtonVisibility();
-                // Add small delay to ensure DOM is updated
-                setTimeout(() => {
-                    this.updateConnectionStatusDot(true);
-                }, 100);
+                this.updateConnectionStatusDot(true);
                 this.showSuccessMessage(`Connection successful! Found ${result.databaseCount} accessible database(s).`);
             } else {
                 // Connection failed - show error message and keep save button hidden
                 // 連接失敗 - 顯示錯誤消息並保持保存按鈕隱藏
                 console.log('🔧 Connection test failed, setting notionConnectionTested = false');
-                this.settings.notionConnectionTested = false;
+                this.workingSettings.notionConnectionTested = false;
                 this.updateSaveButtonVisibility();
-                setTimeout(() => {
-                    this.updateConnectionStatusDot(false);
-                }, 100);
+                this.updateConnectionStatusDot(false);
                 this.showErrorMessage(`Connection failed: ${result.error}`);
             }
             
@@ -395,17 +461,15 @@ export class SettingsModal {
             // Handle unexpected errors
             // 處理意外錯誤
             console.error('Notion connection test failed:', error);
-            this.settings.notionConnectionTested = false;
+            this.workingSettings.notionConnectionTested = false;
             this.updateSaveButtonVisibility();
-            setTimeout(() => {
-                this.updateConnectionStatusDot(false);
-            }, 100);
+            this.updateConnectionStatusDot(false);
             this.showErrorMessage('Connection test failed. Please try again.');
             
         } finally {
             // Reset button state regardless of success or failure
             // 無論成功或失敗都重置按鈕狀態
-            testBtn.textContent = 'Test Connection';
+            testBtn.innerHTML = `<span class="connection-status-dot ${this.workingSettings.notionConnectionTested ? 'connected' : ''}"></span>Test Connection`;
             testBtn.disabled = false;
         }
     }
@@ -459,6 +523,11 @@ export class SettingsModal {
 
     show() {
         if (!this.isVisible) {
+            // Refresh working settings from saved settings when showing modal
+            // 顯示模態框時從已保存的設置刷新工作設置
+            this.workingSettings = JSON.parse(JSON.stringify(this.savedSettings));
+            this.updateUI();
+            
             if (!this.element.parentNode) {
                 document.body.appendChild(this.element);
             }
@@ -476,6 +545,10 @@ export class SettingsModal {
     hide() {
         if (this.isVisible) {
             this.element.classList.remove('show');
+            
+            // Restore working settings from saved settings when closing without saving
+            // 在未保存的情況下關閉時，從已保存的設置恢復工作設置
+            this.workingSettings = JSON.parse(JSON.stringify(this.savedSettings));
             
             setTimeout(() => {
                 if (this.element.parentNode) {

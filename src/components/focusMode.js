@@ -14,6 +14,12 @@ export class FocusMode {
         this.beforeUnloadHandler = null; // Handle reload while in focus mode
         this.settings = this.loadAppSettings();
         this.isMinimalMode = false; // Track minimal mode state
+        
+        // Pomodoro state management
+        this.pomodoroPhase = 'work'; // 'work' or 'rest'
+        this.pomodoroWorkTime = this.parseTimeToMinutes(this.settings.pomodoroWorkTime);
+        this.pomodoroRestTime = this.parseTimeToMinutes(this.settings.pomodoroRestTime);
+        
         this.loadStyles();
         this.loadTaskTimers();
     }
@@ -25,11 +31,29 @@ export class FocusMode {
             const parsed = saved ? JSON.parse(saved) : {};
             return {
                 showPomodoroTimer: parsed.showPomodoroTimer !== false, // default true
+                pomodoroWorkTime: parsed.pomodoroWorkTime || '25:00',
+                pomodoroRestTime: parsed.pomodoroRestTime || '5:00'
             };
         } catch {
-            return { showPomodoroTimer: true };
+            return { 
+                showPomodoroTimer: true,
+                pomodoroWorkTime: '25:00',
+                pomodoroRestTime: '5:00'
+            };
         }
     }
+
+    parseTimeToMinutes(timeString) {
+        // Parse MM:SS format to minutes
+        const parts = timeString.split(':');
+        if (parts.length === 2) {
+            const minutes = parseInt(parts[0], 10) || 0;
+            const seconds = parseInt(parts[1], 10) || 0;
+            return minutes + (seconds / 60);
+        }
+        return 25; // default fallback
+    }
+
     loadStyles() {
         if (document.getElementById('focus-mode-styles')) return;
         const link = document.createElement('link');
@@ -94,6 +118,12 @@ export class FocusMode {
         clearInterval(taskTimer.handle);
         taskTimer.handle = null;
         this.saveTaskTimers(); // Save when paused
+        
+        // Trigger auto-sync for time spent changes
+        // 為時間花費更改觸發自動同步
+        if (this.taskBoard && typeof this.taskBoard.triggerTimeSpentSync === 'function') {
+            this.taskBoard.triggerTimeSpentSync(this.currentTaskId);
+        }
     }
 
     // Update current task timer display
@@ -221,6 +251,11 @@ export class FocusMode {
 
         // Apply initial visibility based on settings
         this.applyPomodoroVisibility();
+        
+        // Initialize timer with current phase time
+        this.setTimerForCurrentPhase();
+        this.updateTimer();
+        this.updateTimerLabel();
     }
 
     mount() {
@@ -285,6 +320,13 @@ export class FocusMode {
             const detail = e.detail || {};
             const prev = this.settings.showPomodoroTimer;
             this.settings.showPomodoroTimer = detail.showPomodoroTimer !== false;
+            this.settings.pomodoroWorkTime = detail.pomodoroWorkTime || '25:00';
+            this.settings.pomodoroRestTime = detail.pomodoroRestTime || '5:00';
+            
+            // Update Pomodoro times
+            this.pomodoroWorkTime = this.parseTimeToMinutes(this.settings.pomodoroWorkTime);
+            this.pomodoroRestTime = this.parseTimeToMinutes(this.settings.pomodoroRestTime);
+            
             this.applyPomodoroVisibility();
             // If toggled off while running, stop pomodoro countdown only
             if (prev && !this.settings.showPomodoroTimer && this.timer.handle) {
@@ -325,9 +367,15 @@ export class FocusMode {
         if (this.settings.showPomodoroTimer) {
             this.timer.handle = setInterval(() => {
                 if (this.timer.seconds === 0) {
-                    if (this.timer.minutes === 0) { this.resetTimer(); return; }
-                    this.timer.minutes--; this.timer.seconds = 59;
-                } else { this.timer.seconds--; }
+                    if (this.timer.minutes === 0) { 
+                        this.handlePomodoroPhaseComplete(); 
+                        return; 
+                    }
+                    this.timer.minutes--; 
+                    this.timer.seconds = 59;
+                } else { 
+                    this.timer.seconds--; 
+                }
                 this.updateTimer();
             }, 1000);
         }
@@ -356,12 +404,202 @@ export class FocusMode {
 
     resetTimer() { 
         this.pauseTimer(); 
-        // Only reset Pomodoro display; its interval is gated by setting
-        this.timer.minutes = 25; 
-        this.timer.seconds = 0; 
+        // Reset Pomodoro display based on current phase
+        this.setTimerForCurrentPhase();
         this.positiveTimer.totalSeconds = 0; // Reset positive timer
         this.updateTimer(); 
         this.updatePositiveTimer();
+    }
+
+    setTimerForCurrentPhase() {
+        const totalMinutes = this.pomodoroPhase === 'work' ? this.pomodoroWorkTime : this.pomodoroRestTime;
+        this.timer.minutes = Math.floor(totalMinutes);
+        this.timer.seconds = Math.round((totalMinutes - this.timer.minutes) * 60);
+        if (this.timer.seconds >= 60) {
+            this.timer.minutes++;
+            this.timer.seconds -= 60;
+        }
+    }
+
+    handlePomodoroPhaseComplete() {
+        if (this.pomodoroPhase === 'work') {
+            // Work phase completed - switch to rest
+            this.pomodoroPhase = 'rest';
+            this.playNotificationSound('rest');
+            this.showNotification('Time for a break! 🎉', 'Take a 5-minute rest to recharge.');
+            this.setTimerForCurrentPhase();
+            this.updateTimerLabel();
+        } else {
+            // Rest phase completed - switch to work
+            this.pomodoroPhase = 'work';
+            this.playNotificationSound('work');
+            this.showRestEndNotification();
+        }
+        this.updateTimer();
+    }
+
+    showRestEndNotification() {
+        // Create a custom notification modal for rest end
+        const modal = document.createElement('div');
+        modal.className = 'pomodoro-notification-modal';
+        modal.innerHTML = `
+            <div class="notification-content">
+                <div class="notification-icon">⏰</div>
+                <h3>Break Time is Over!</h3>
+                <p>Time to get back to work. Ready to focus?</p>
+                <button class="notification-btn">Start Working</button>
+            </div>
+        `;
+        
+        document.body.appendChild(modal);
+        
+        // Add styles
+        modal.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            animation: fadeIn 0.3s ease;
+        `;
+        
+        const content = modal.querySelector('.notification-content');
+        content.style.cssText = `
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            text-align: center;
+            max-width: 400px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            animation: slideUp 0.3s ease;
+        `;
+        
+        const btn = modal.querySelector('.notification-btn');
+        btn.style.cssText = `
+            background: #10b981;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 1rem;
+        `;
+        
+        btn.addEventListener('click', () => {
+            modal.remove();
+        });
+        
+        // Auto-remove after 10 seconds if user doesn't click
+        setTimeout(() => {
+            if (modal.parentNode) {
+                modal.remove();
+            }
+        }, 10000);
+    }
+
+    playNotificationSound(type) {
+        // Create and play notification sounds
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        
+        if (type === 'rest') {
+            // Pleasant chime for break time
+            const frequencies = [523.25, 659.25, 783.99]; // C5, E5, G5
+            frequencies.forEach((freq, index) => {
+                setTimeout(() => {
+                    const oscillator = audioContext.createOscillator();
+                    const gainNode = audioContext.createGain();
+                    
+                    oscillator.connect(gainNode);
+                    gainNode.connect(audioContext.destination);
+                    
+                    oscillator.frequency.value = freq;
+                    oscillator.type = 'sine';
+                    
+                    gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+                    
+                    oscillator.start(audioContext.currentTime);
+                    oscillator.stop(audioContext.currentTime + 0.5);
+                }, index * 200);
+            });
+        } else if (type === 'work') {
+            // More urgent sound for back to work
+            const frequencies = [440, 554.37, 659.25]; // A4, C#5, E5
+            frequencies.forEach((freq, index) => {
+                setTimeout(() => {
+                    const oscillator = audioContext.createOscillator();
+                    const gainNode = audioContext.createGain();
+                    
+                    oscillator.connect(gainNode);
+                    gainNode.connect(audioContext.destination);
+                    
+                    oscillator.frequency.value = freq;
+                    oscillator.type = 'square';
+                    
+                    gainNode.gain.setValueAtTime(0.15, audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+                    
+                    oscillator.start(audioContext.currentTime);
+                    oscillator.stop(audioContext.currentTime + 0.3);
+                }, index * 150);
+            });
+        }
+    }
+
+    showNotification(title, message) {
+        const notification = document.createElement('div');
+        notification.className = 'pomodoro-notification';
+        notification.innerHTML = `
+            <div class="notification-title">${title}</div>
+            <div class="notification-message">${message}</div>
+        `;
+        
+        notification.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: ${this.pomodoroPhase === 'rest' ? '#10b981' : '#3b82f6'};
+            color: white;
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            z-index: 9999;
+            transform: translateX(100%);
+            transition: transform 0.3s ease;
+            max-width: 300px;
+        `;
+        
+        document.body.appendChild(notification);
+        
+        // Animate in
+        setTimeout(() => {
+            notification.style.transform = 'translateX(0)';
+        }, 100);
+        
+        // Remove after 5 seconds
+        setTimeout(() => {
+            notification.style.transform = 'translateX(100%)';
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.parentNode.removeChild(notification);
+                }
+            }, 300);
+        }, 5000);
+    }
+
+    updateTimerLabel() {
+        if (!this.root) return;
+        const label = this.root.querySelector('.timer-label');
+        if (label) {
+            label.textContent = this.pomodoroPhase === 'work' ? 'Pomodoro' : 'Rest Time';
+        }
     }
     
     updateTimer() {
@@ -746,5 +984,6 @@ export class FocusMode {
         timerBlock.appendChild(titleElement);
     }
 }
+
 
 

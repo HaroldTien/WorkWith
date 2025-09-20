@@ -38,19 +38,24 @@
 }
 
 .task-board-header {
-    padding: 12px 16px;
+    padding: 8px 12px;
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     display: flex;
     justify-content: space-between;
     align-items: center;
     background: rgba(255, 255, 255, 0.02);
+    min-height: 40px;
+    max-height: 40px;
+    height: 40px;
+    flex-shrink: 0;
 }
 
 .task-board-title {
     color: #ffffff;
-    font-size: 18px;
+    font-size: 16px;
     font-weight: 600;
     margin: 0;
+    line-height: 1.2;
 }
 
 .close-btn {
@@ -73,7 +78,7 @@
 
 .task-board-content {
     padding: 16px;
-    height: calc(100% - 65px);
+    height: calc(100% - 56px);
     overflow: hidden;
     display: grid;
     grid-template-columns: 1fr 1fr 1fr;
@@ -333,9 +338,9 @@
 }
 
 .btn {
-    padding: 10px 20px;
+    padding: 6px 12px;
     border-radius: 6px;
-    font-size: 14px;
+    font-size: 13px;
     font-weight: 500;
     cursor: pointer;
     transition: all 0.2s ease;
@@ -408,4 +413,671 @@
 
 .time-dropdown .dropdown-option:active {
     background: rgba(59, 130, 246, 0.3);
+}
+
+/* Notion Integration Styles */
+/* Notion 整合樣式 */
+
+.header-left {
+    display: flex;
+    align-items: center;
+}
+
+.notion-integration {
+    position: relative;
+}
+
+.notion-btn {
+    background: #ffffff;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 6px;
+    padding: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #ffffff;
+}
+
+.notion-btn:hover {
+    background: #ffffff;
+    border-color: rgba(59, 130, 246, 0.5);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.notion-btn.linked {
+    background: #ffffff;
+    border-color: rgba(16, 185, 129, 0.4);
+    color: #10B981;
+}
+
+.notion-btn.linked:hover {
+    background: #ffffff;
+    border-color: rgba(16, 185, 129, 0.6);
+    box-shadow: 0 2px 8px rgba(16, 185, 129, 0.2);
+}
+
+.notion-btn img {
+    width: 16px;
+    height: 16px;
+    object-fit: contain;
+}
+
+.notion-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    margin-top: 8px;
+    background: #1e293b;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+    z-index: 1000;
+    min-width: 280px;
+    max-width: 320px;
+}
+
+.dropdown-header {
+    padding: 12px 16px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: 8px 8px 0 0;
+}
+
+.dropdown-header span {
+    color: #ffffff;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.dropdown-content {
+    max-height: 300px;
+    overflow-y: auto;
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE and Edge */
+}
+
+.dropdown-content::-webkit-scrollbar {
+    display: none; /* Chrome, Safari, Opera */
+}
+
+.dropdown-item {
+    padding: 12px 16px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.dropdown-item:last-child {
+    border-bottom: none;
+}
+
+.dropdown-item:hover {
+    background: rgba(59, 130, 246, 0.15);
+}
+
+.dropdown-item:active {
+    background: rgba(59, 130, 246, 0.25);
+}
+
+.database-title {
+    display: block;
+    color: #ffffff;
+    font-size: 14px;
+    font-weight: 500;
+    margin-bottom: 4px;
+}
+
+.database-description {
+    display: block;
+    color: #94a3b8;
+    font-size: 12px;
+    line-height: 1.4;
+}
+
+.dropdown-loading,
+.dropdown-error {
+    padding: 16px;
+    text-align: center;
+    color: #94a3b8;
+    font-size: 14px;
+}
+
+.dropdown-error {
+    color: #ef4444;
+}
+
+/* Update header layout to accommodate Notion button */
+.task-board-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+}
+
+.task-board-header h2 {
+    flex: 1;
+    text-align: center;
+    margin: 0;
+    font-size: 16px;
+    line-height: 1.2;
+}
+
+/* Sync Configuration Styles */
+/* 同步配置樣式 */
+
+.sync-config-section {
+    padding: 16px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.sync-config-section:last-child {
+    border-bottom: none;
+}
+
+.sync-status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.status-indicator {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: #ef4444;
+}
+
+.status-indicator.connected {
+    background-color: #10b981;
+    box-shadow: 0 0 4px rgba(16, 185, 129, 0.4);
+}
+
+.status-text {
+    color: #ffffff;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.linked-database {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    background: rgba(16, 185, 129, 0.1);
+    border: 1px solid rgba(16, 185, 129, 0.2);
+    border-radius: 6px;
+}
+
+.database-label {
+    color: #94a3b8;
+    font-size: 12px;
+}
+
+.database-name {
+    color: #10b981;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.config-item {
+    margin-bottom: 16px;
+}
+
+.config-label {
+    display: block;
+    color: #ffffff;
+    font-size: 14px;
+    font-weight: 500;
+    margin-bottom: 8px;
+}
+
+
+.toggle-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.sync-toggle {
+    width: 18px;
+    height: 18px;
+    accent-color: #3b82f6;
+}
+
+.toggle-label {
+    color: #ffffff;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.sync-actions {
+    display: flex;
+    gap: 8px;
+    padding: 16px;
+}
+
+.sync-btn {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 10px 16px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.sync-btn.primary {
+    background: #3b82f6;
+    color: #ffffff;
+}
+
+.sync-btn.primary:hover {
+    background: #2563eb;
+    transform: translateY(-1px);
+}
+
+.sync-btn.secondary {
+    background: rgba(255, 255, 255, 0.1);
+    color: #ffffff;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.sync-btn.secondary:hover {
+    background: rgba(255, 255, 255, 0.15);
+    border-color: rgba(255, 255, 255, 0.3);
+}
+
+.sync-btn.connect {
+    background: #10b981;
+    color: #ffffff;
+    width: 100%;
+}
+
+.sync-btn.connect:hover {
+    background: #059669;
+    transform: translateY(-1px);
+}
+
+.sync-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none !important;
+}
+
+.sync-icon {
+    font-size: 16px;
+}
+
+.sync-config-error {
+    padding: 20px;
+    text-align: center;
+}
+
+.error-icon {
+    font-size: 24px;
+    margin-bottom: 8px;
+}
+
+.error-message {
+    color: #ef4444;
+    font-size: 16px;
+    font-weight: 500;
+    margin-bottom: 4px;
+}
+
+.error-detail {
+    color: #94a3b8;
+    font-size: 14px;
+}
+
+.database-selection-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 2px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.back-btn {
+    background: none;
+    border: none;
+    color: #3b82f6;
+    cursor: pointer;
+    font-size: 14px;
+    padding: 4px 8px;
+    border-radius: 4px;
+    transition: background-color 0.2s ease;
+}
+
+.back-btn:hover {
+    background: rgba(59, 130, 246, 0.1);
+}
+
+.database-selection-header h4 {
+    color: #ffffff;
+    font-size: 12px;
+    font-weight: 500;
+    margin: 0;
+}
+
+.database-list {
+    max-height: 250px;
+    overflow-y: auto;
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE and Edge */
+}
+
+.database-list::-webkit-scrollbar {
+    display: none; /* Chrome, Safari, Opera */
+}
+
+.database-option {
+    padding: 12px 16px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.database-option:last-child {
+    border-bottom: none;
+}
+
+.database-option:hover {
+    background: rgba(59, 130, 246, 0.15);
+}
+
+.database-option .database-title {
+    color: #ffffff;
+    font-size: 14px;
+    font-weight: 500;
+    margin-bottom: 4px;
+}
+
+.database-option .database-description {
+    color: #94a3b8;
+    font-size: 12px;
+    line-height: 1.4;
+}
+
+/* Schema Validation Styles */
+/* 架構驗證樣式 */
+
+.schema-validation-error {
+    padding: 20px;
+    text-align: center;
+}
+
+.missing-columns {
+    margin: 12px 0;
+    text-align: left;
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.2);
+    border-radius: 6px;
+    padding: 12px;
+}
+
+.missing-column {
+    display: block;
+    color: #ef4444;
+    font-size: 14px;
+    font-weight: 500;
+    margin-bottom: 4px;
+}
+
+.missing-column:last-child {
+    margin-bottom: 0;
+}
+
+.schema-actions {
+    margin-top: 16px;
+}
+
+.schema-actions .sync-btn {
+    width: 100%;
+    margin-bottom: 8px;
+}
+
+/* Status Mapping Styles */
+.section-title {
+    font-size: 11px;
+    font-weight: 700;
+    color: #374151;
+    margin: 0 0 12px 0;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    border-bottom: 1px solid #E5E7EB;
+    padding-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.section-title::before {
+    content: "⚙️";
+    font-size: 10px;
+}
+
+.status-mapping {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.mapping-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 4px 0;
+    border-radius: 4px;
+    transition: background-color 0.2s ease;
+}
+
+.mapping-row:hover {
+    background-color: rgba(249, 250, 251, 0.5);
+}
+
+.mapping-label {
+    font-size: 11px;
+    font-weight: 500;
+    color: #6B7280;
+    min-width: 80px;
+    text-align: right;
+}
+
+.status-select {
+    flex: 1;
+    padding: 6px 10px;
+    border: 1px solid #D1D5DB;
+    border-radius: 6px;
+    font-size: 11px;
+    background: white;
+    color: #374151;
+    min-height: 32px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    appearance: none;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236B7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 8px center;
+    background-size: 12px;
+    padding-right: 28px;
+    font-weight: 500;
+}
+
+.status-select:hover {
+    border-color: #9CA3AF;
+    background-color: #F9FAFB;
+}
+
+.status-select:focus {
+    outline: none;
+    border-color: #3B82F6;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+    background-color: white;
+}
+
+.status-select option {
+    padding: 8px 12px;
+    font-size: 11px;
+    font-weight: 500;
+    color: #374151;
+    background: white;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+    border-left: 3px solid transparent;
+}
+
+.status-select option:hover {
+    background: linear-gradient(135deg, #F3F4F6 0%, #E5E7EB 100%);
+    color: #1F2937;
+    transform: translateX(2px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.status-select option:checked,
+.status-select option:focus {
+    background: linear-gradient(135deg, #3B82F6 0%, #1D4ED8 100%);
+    color: white;
+    font-weight: 600;
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+}
+
+.status-select option:active {
+    background: linear-gradient(135deg, #1D4ED8 0%, #1E40AF 100%);
+    transform: translateY(1px);
+}
+
+/* Special styling for different status types */
+.status-select option[value="Not started"] {
+    border-left: 3px solid #9CA3AF;
+}
+
+.status-select option[value="In progress"] {
+    border-left: 3px solid #F59E0B;
+}
+
+.status-select option[value="TBC"] {
+    border-left: 3px solid #3B82F6;
+}
+
+.status-select option[value="Done"] {
+    border-left: 3px solid #10B981;
+}
+
+/* Hover effects for status-specific colors */
+.status-select option[value="Not started"]:hover {
+    background: linear-gradient(135deg, #F3F4F6 0%, #E5E7EB 100%);
+    border-left-color: #6B7280;
+}
+
+.status-select option[value="In progress"]:hover {
+    background: linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%);
+    border-left-color: #D97706;
+}
+
+.status-select option[value="TBC"]:hover {
+    background: linear-gradient(135deg, #DBEAFE 0%, #BFDBFE 100%);
+    border-left-color: #2563EB;
+}
+
+.status-select option[value="Done"]:hover {
+    background: linear-gradient(135deg, #D1FAE5 0%, #A7F3D0 100%);
+    border-left-color: #059669;
+}
+
+/* Status Mapping Error Styles */
+.status-error {
+    margin-top: 8px;
+    padding: 6px 8px;
+    background: #FEF2F2;
+    border: 1px solid #FECACA;
+    border-radius: 4px;
+}
+
+.error-message {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.error-icon {
+    font-size: 12px;
+}
+
+.error-text {
+    font-size: 10px;
+    color: #DC2626;
+    font-weight: 500;
+}
+
+/* Status Mapping Container Styles */
+.status-mapping-container {
+    padding: 16px;
+}
+
+.mapping-header {
+    margin-bottom: 12px;
+}
+
+.mapping-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: #1F2937;
+    margin: 0 0 8px 0;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.database-info {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.database-name {
+    font-size: 11px;
+    color: #6B7280;
+    background: #F3F4F6;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-weight: 500;
+}
+
+.mapping-description {
+    font-size: 10px;
+    color: #6B7280;
+    margin-bottom: 16px;
+    line-height: 1.4;
+    padding: 8px 12px;
+    background: #F9FAFB;
+    border-radius: 4px;
+    border-left: 3px solid #3B82F6;
+}
+
+.mapping-actions {
+    margin-top: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.mapping-actions .sync-btn {
+    width: 100%;
+}
+
+.mapping-actions .back-btn {
+    width: 100%;
+    margin-top: 4px;
 }
