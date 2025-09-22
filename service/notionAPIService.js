@@ -21,6 +21,80 @@ class NotionAPIService {
     }
 
     /**
+     * Convert Notion rich text array to HTML string (anchors preserved)
+     * 將 Notion rich text 陣列轉為 HTML 字串（保留超連結）
+     * @param {Array} richArray - Notion rich text array (e.g., title, rich_text)
+     * @returns {string} - HTML string
+     */
+    convertRichTextToHTML(richArray) {
+        if (!Array.isArray(richArray) || richArray.length === 0) {
+            return '';
+        }
+
+        const escapeHtml = (str) => String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+
+        return richArray.map(part => {
+            const plain = part?.plain_text ?? part?.text?.content ?? '';
+            const href = part?.href || part?.text?.link?.url || null;
+            const safe = escapeHtml(plain);
+            if (href) {
+                const safeHref = escapeHtml(href);
+                return `<a href="${safeHref}" target="_blank" rel="noopener noreferrer">${safe}</a>`;
+            }
+            return safe;
+        }).join('');
+    }
+
+    /**
+     * Convert simple HTML string to Notion rich_text array (supports <a href>)
+     * 將簡單 HTML 轉為 Notion rich_text 陣列（支援 <a href>）
+     * @param {string} htmlOrText - HTML string or plain text
+     * @returns {Array} - Notion rich_text array
+     */
+    convertHTMLToNotionRichText(htmlOrText) {
+        const text = typeof htmlOrText === 'string' ? htmlOrText : '';
+        if (!text) {
+            return [{ type: 'text', text: { content: '' } }];
+        }
+
+        const decode = (s) => s
+            .replace(/&lt;/g, '<')
+            .replace(/&gt;/g, '>')
+            .replace(/&amp;/g, '&')
+            .replace(/&quot;/g, '"')
+            .replace(/&#39;/g, "'");
+
+        const segments = [];
+        const anchorRegex = /<a\s+[^>]*href=["']([^"']+)["'][^>]*>([\s\S]*?)<\/a>/gi;
+        let lastIndex = 0;
+        let match;
+        while ((match = anchorRegex.exec(text)) !== null) {
+            const before = text.slice(lastIndex, match.index);
+            if (before) {
+                segments.push({ type: 'text', text: { content: decode(before.replace(/<[^>]+>/g, '')) } });
+            }
+            const href = decode(match[1]);
+            const inner = decode(match[2].replace(/<[^>]+>/g, ''));
+            segments.push({ type: 'text', text: { content: inner, link: { url: href } } });
+            lastIndex = match.index + match[0].length;
+        }
+        const after = text.slice(lastIndex);
+        if (after) {
+            segments.push({ type: 'text', text: { content: decode(after.replace(/<[^>]+>/g, '')) } });
+        }
+
+        if (segments.length === 0) {
+            return [{ type: 'text', text: { content: decode(text.replace(/<[^>]+>/g, '')) } }];
+        }
+        return segments;
+    }
+
+    /**
      * Set the Notion integration token
      * 設置 Notion 整合令牌
      * @param {string} token - The Notion integration token
@@ -306,13 +380,9 @@ class NotionAPIService {
         // 為 Notion 構建頁面屬性對象
         const properties = {
             'Name': {
-                title: [
-                    {
-                        text: {
-                            content: task.title || 'Untitled Task'
-                        }
-                    }
-                ]
+                title: Array.isArray(task.titleRich)
+                    ? task.titleRich
+                    : this.convertHTMLToNotionRichText(task.titleHTML || task.title || 'Untitled Task')
             },
             'Status Update': {
                 status: {
@@ -398,9 +468,11 @@ class NotionAPIService {
         
         // Build task object with extracted data
         // 使用提取的數據構建任務對象
+        const titleParts = properties['Name']?.title || [];
         const task = {
             id: notionPage.id, // Use Notion page ID as the task ID
-            title: properties['Name']?.title?.[0]?.text?.content || 'Untitled Task',
+            title: titleParts?.[0]?.text?.content || titleParts?.[0]?.plain_text || 'Untitled Task',
+            titleHTML: this.convertRichTextToHTML(titleParts),
             status: properties['Status Update']?.status?.name || 'Not started',
             estimatedTime: properties['Est Time']?.number || 0,
             timeSpent: properties['Time Spent']?.number || 0,
@@ -416,9 +488,13 @@ class NotionAPIService {
                 if (child.type === 'toggle' && child.toggle?.children) {
                     child.toggle.children.forEach(subtaskChild => {
                         if (subtaskChild.type === 'to_do') {
+                            const richArray = subtaskChild.to_do?.rich_text || [];
+                            const text = richArray?.[0]?.text?.content || richArray?.[0]?.plain_text || '';
+                            const textHTML = this.convertRichTextToHTML(richArray);
                             subtasks.push({
                                 id: subtaskChild.id,
-                                text: subtaskChild.to_do?.rich_text?.[0]?.text?.content || '',
+                                text: text,
+                                textHTML: textHTML,
                                 completed: subtaskChild.to_do?.checked || false
                             });
                         }
@@ -675,13 +751,9 @@ class NotionAPIService {
             const updateData = {
                 properties: {
                     'Name': {
-                        title: [
-                            {
-                                text: {
-                                    content: task.title || 'Untitled Task'
-                                }
-                            }
-                        ]
+                        title: Array.isArray(task.titleRich)
+                            ? task.titleRich
+                            : this.convertHTMLToNotionRichText(task.titleHTML || task.title || 'Untitled Task')
                     },
                     'Status Update': {
                         status: {
@@ -856,14 +928,9 @@ class NotionAPIService {
                     object: 'block',
                     type: 'to_do',
                     to_do: {
-                        rich_text: [
-                            {
-                                type: 'text',
-                                text: {
-                                    content: subtask.text || ''
-                                }
-                            }
-                        ],
+                        rich_text: Array.isArray(subtask.rich)
+                            ? subtask.rich
+                            : this.convertHTMLToNotionRichText(subtask.textHTML || subtask.text || ''),
                         checked: subtask.completed || false
                     }
                 }));

@@ -138,7 +138,7 @@ class FocusStrategy extends BaseStrategy {
         
         return `
             <div class="task-content">
-                <span class="task-title">${task.title}</span>
+                <span class="task-title">${task.titleHTML || task.title || ''}</span>
                 ${hasEstimate ? `<span class="task-time">⏱️ ${this.formatEstimateTime(estimateMinutes)}</span>` : ''}
                 ${totalSubtasks > 0 ? `
                     <div class="focus-subtasks">
@@ -217,7 +217,7 @@ class FocusStrategy extends BaseStrategy {
         return task.subtasks.map(subtask => `
             <div class="focus-subtask-item ${subtask.completed ? 'completed' : ''}" data-subtask-id="${subtask.id}">
                 <input type="checkbox" class="subtask-checkbox" ${subtask.completed ? 'checked' : ''}>
-                <span class="subtask-text">${subtask.text}</span>
+                <span class="subtask-text">${subtask.textHTML || subtask.text || ''}</span>
                 <button class="delete-subtask-btn" data-subtask-id="${subtask.id}" title="Delete subtask">
                     <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <polyline points="3,6 5,6 21,6"></polyline>
@@ -247,7 +247,7 @@ class BoardStrategy extends BaseStrategy {
         
         return `
             <div class="task-header">
-                <div class="task-title">${task.title}</div>
+                <div class="task-title">${task.titleHTML || task.title || ''}</div>
                 <div class="task-actions">
                     ${callbacks.status !== 'done' ? `<button class="done-task-btn" data-task-id="${task.id}" data-status="${callbacks.status}" aria-label="Mark as done" title="Mark as done">Done</button>` : ''}
                     <button class="delete-task-btn" data-task-id="${task.id}" data-status="${callbacks.status}" aria-label="Delete task" title="Delete task">
@@ -350,7 +350,7 @@ class BoardStrategy extends BaseStrategy {
         return task.subtasks.map(subtask => `
             <div class="subtask-item ${subtask.completed ? 'completed' : ''}" data-subtask-id="${subtask.id}">
                 <input type="checkbox" class="subtask-checkbox" ${subtask.completed ? 'checked' : ''}>
-                <span class="subtask-text">${subtask.text}</span>
+                <span class="subtask-text">${subtask.textHTML || subtask.text || ''}</span>
                 <button class="delete-subtask-btn" data-subtask-id="${subtask.id}" title="Delete subtask">
                     <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <polyline points="3,6 5,6 21,6"></polyline>

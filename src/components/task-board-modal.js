@@ -1240,13 +1240,33 @@ export class TaskBoardModal {
                 
                 // Convert Notion pages to task format and apply status mappings
                 // 將 Notion 頁面轉換為任務格式並應用狀態映射
+                const convertRichTextToHTML = (richArray) => {
+                    if (!Array.isArray(richArray) || richArray.length === 0) return '';
+                    const escapeHtml = (str) => String(str)
+                        .replace(/&/g, '&amp;')
+                        .replace(/</g, '&lt;')
+                        .replace(/>/g, '&gt;')
+                        .replace(/\"/g, '&quot;')
+                        .replace(/'/g, '&#39;');
+                    return richArray.map(part => {
+                        const plain = part?.plain_text ?? part?.text?.content ?? '';
+                        const href = part?.href || part?.text?.link?.url || null;
+                        const safe = escapeHtml(plain);
+                        if (href) {
+                            const safeHref = escapeHtml(href);
+                            return `<a href="${safeHref}" target="_blank" rel="noopener noreferrer">${safe}</a>`;
+                        }
+                        return safe;
+                    }).join('');
+                };
                 for (const notionPage of pagesToDownload) {
                     try {
                         // Convert Notion page to task format
                         // 將 Notion 頁面轉換為任務格式
                         const notionTask = {
                             id: Date.now() + Math.floor(Math.random() * 100000), // Generate new app ID
-                            title: notionPage.properties?.Name?.title?.[0]?.text?.content || 'Untitled Task',
+                            title: notionPage.properties?.Name?.title?.[0]?.text?.content || notionPage.properties?.Name?.title?.[0]?.plain_text || 'Untitled Task',
+                            titleHTML: convertRichTextToHTML(notionPage.properties?.Name?.title || []),
                             status: notionPage.properties?.['Status Update']?.status?.name || 'Not started',
                             estimatedTime: notionPage.properties?.['Est Time']?.number || 0,
                             timeSpent: notionPage.properties?.['Time Spent']?.number || 0,
