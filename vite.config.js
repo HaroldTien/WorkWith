@@ -1,6 +1,8 @@
 import { defineConfig } from 'vite';
 import { resolve } from 'path';
 
+const isProd = process.env.NODE_ENV === 'production';
+
 export default defineConfig({
     // Base configuration
     base: './',
@@ -10,13 +12,16 @@ export default defineConfig({
         outDir: 'dist',
         emptyOutDir: true,
         assetsDir: 'assets',
+        minify: 'esbuild',
+        cssCodeSplit: true,
+        sourcemap: false,
+        target: 'es2019',
         rollupOptions: {
             input: {
                 main: resolve(__dirname, 'index.html')
             },
             output: {
-                // Electron apps don't need code splitting
-                manualChunks: undefined,
+                // Allow Rollup to automatically create shared chunks for better caching
                 // Ensure CSS files are properly bundled
                 assetFileNames: (assetInfo) => {
                     const info = assetInfo.name.split('.');
@@ -30,7 +35,9 @@ export default defineConfig({
                     return `assets/[name]-[hash][extname]`;
                 }
             }
-        }
+        },
+        // Drop debug statements in production bundles
+        esbuild: isProd ? { drop: ['console', 'debugger'] } : undefined
     },
     
     // Development server configuration
@@ -50,7 +57,7 @@ export default defineConfig({
     
     // CSS configuration
     css: {
-        devSourcemap: true,
+        devSourcemap: !isProd,
         // Ensure CSS is properly processed
         postcss: {
             plugins: []

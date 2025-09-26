@@ -90,6 +90,25 @@ export class SettingsModal {
                         </div>
                     </div>
 
+                    <!-- Appearance Section -->
+                    <div class="settings-section">
+                        <h3 class="settings-section-title">Appearance</h3>
+
+                        <div class="settings-option">
+                            <div>
+                                <div class="settings-option-label">Theme</div>
+                                <div class="settings-option-description">Switch between Notion Light and Notion Dark</div>
+                            </div>
+                            <div class="settings-option-control">
+                                <select class="settings-select" data-setting="theme">
+                                    <option value="system" ${this.workingSettings.theme === 'system' ? 'selected' : ''}>System</option>
+                                    <option value="notion-light" ${this.workingSettings.theme === 'notion-light' ? 'selected' : ''}>Notion Light</option>
+                                    <option value="notion-dark" ${this.workingSettings.theme === 'notion-dark' ? 'selected' : ''}>Notion Dark</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- Notion Integration Section -->
                     <div class="settings-section">
                         <h3 class="settings-section-title">Notion Integration</h3>
@@ -244,6 +263,7 @@ export class SettingsModal {
             showPomodoroTimer: true,
             pomodoroWorkTime: '25:00',
             pomodoroRestTime: '5:00',
+            theme: 'system',
             notionSyncEnabled: false,
             notionApiKey: '',
             notionConnectionTested: false
@@ -266,7 +286,22 @@ export class SettingsModal {
     }
 
     applySettings() {
-        // No visual theme settings to apply currently.
+        // Apply theme
+        this.applyTheme(this.savedSettings.theme || 'system');
+    }
+
+    applyTheme(theme) {
+        const body = document.body;
+        body.classList.remove('notion-light', 'notion-dark');
+        if (theme === 'notion-light') {
+            body.classList.add('notion-light');
+        } else if (theme === 'notion-dark') {
+            body.classList.add('notion-dark');
+        } else {
+            // system: follow prefers-color-scheme
+            const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+            body.classList.add(prefersDark ? 'notion-dark' : 'notion-light');
+        }
     }
 
 
