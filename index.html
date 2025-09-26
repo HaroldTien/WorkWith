@@ -4,6 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WorkWith</title>
+    <!-- Import CSS files -->
+    <link rel="stylesheet" href="/src/components/TaskBoardModal.css">
+    <link rel="stylesheet" href="/src/components/TaskCard.css">
+    <link rel="stylesheet" href="/src/components/focusMode.css">
+    <link rel="stylesheet" href="/src/components/settings.css">
+    <link rel="stylesheet" href="/src/components/notion-theme.css">
+    
     <style>
         /* 
         🌌 GRADIENT THEMES - Choose One:
@@ -113,7 +120,7 @@
             opacity: 0.9;
         }
         
-        button {
+        button { /* default dark style; theme overrides will adjust */
             background: linear-gradient(135deg, #4338CA, #6D28D9);
             color: white;
             border: none;
@@ -147,7 +154,7 @@
              overflow-y: hidden;
              max-width: 800px;
              width: 70%;
-             height: 400px;
+             height: 460px; /* increased height to avoid clipping */
          }
 
          /* Scrollbar styling for main container */
@@ -172,12 +179,12 @@
          /* Task board block - both creation and instances */
          .task-board-block {
              width: 200px;
-             height: 400px;
+             height: 440px; /* increased height to give vertical breathing room */
              background: rgba(255, 255, 255, 0.05);
              backdrop-filter: blur(10px);
              border-radius: 20px;
              box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-             border: 1px solid rgba(255, 255, 255, 0.1);
+             border: 2px solid rgba(255, 255, 255, 0.18);
              display: flex;
              flex-direction: column;
              align-items: center;
@@ -186,12 +193,14 @@
              transition: all 0.3s ease;
              cursor: pointer;
              position: relative;
+             margin-top: 8px; /* ensure top border not clipped when hovered */
+             margin-bottom: 8px; /* extra bottom spacing for symmetry */
          }
 
          .task-board-block:hover {
              transform: translateY(-4px);
              box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
-             border-color: rgba(255, 255, 255, 0.2);
+             border-color: rgba(255, 255, 255, 0.28);
          }
 
          /* Creation block specific styles */

@@ -1,0 +1,239 @@
+/* Notion-style theme (minimal, avoids double borders) */
+
+/* Base */
+body.notion-light { background: #FFFFFF !important; color: #2F3437 !important; }
+body.notion-dark  { background: #191919 !important; color: #F1F1F0 !important; }
+
+/* Titlebar */
+body.notion-light .titlebar { background: #FFFFFF !important; border-bottom: 1px solid rgba(55,53,47,.16) !important; }
+body.notion-dark  .titlebar { background: #191919 !important; border-bottom: 1px solid rgba(255,255,255,.08) !important; }
+
+/* Outer card only: inner instance transparent to prevent double borders */
+body.notion-light .task-board-block { background: #FFFFFF !important; border: 2px solid rgba(55,53,47,.28) !important; box-shadow: none !important; backdrop-filter: none !important; height: 440px !important; margin-top: 8px !important; margin-bottom: 8px !important; }
+body.notion-dark  .task-board-block { background: #191919 !important; border: 2px solid rgba(255,255,255,.14) !important; box-shadow: none !important; backdrop-filter: none !important; height: 440px !important; margin-top: 8px !important; margin-bottom: 8px !important; }
+
+body.notion-light .task-board-instance,
+body.notion-dark  .task-board-instance { background: transparent !important; border: none !important; box-shadow: none !important; }
+
+/* Dropdown */
+body.notion-light .board-dropdown-menu { background: #FFFFFF !important; border: 1px solid rgba(55,53,47,.16) !important; }
+body.notion-dark  .board-dropdown-menu { background: #191919 !important; border: 1px solid rgba(255,255,255,.08) !important; }
+
+/* Buttons (generic; titlebar gear etc. override) */
+body.notion-light .settings-button { background:#FFFFFF !important; border:1px solid rgba(55,53,47,.16) !important; color:#2F3437 !important; }
+body.notion-dark  .settings-button { background:#2A2A2A !important; border:1px solid rgba(255,255,255,.08) !important; color:#F1F1F0 !important; }
+
+/* Task board modal */
+body.notion-light .task-board-modal { background:#FFFFFF !important; border:1px solid rgba(55,53,47,.16) !important; }
+body.notion-dark  .task-board-modal { background:#191919 !important; border:1px solid rgba(255,255,255,.08) !important; }
+body.notion-light .task-board-header { background:#FFFFFF !important; border-bottom:1px solid rgba(55,53,47,.16) !important; }
+body.notion-dark  .task-board-header { background:#191919 !important; border-bottom:1px solid rgba(255,255,255,.08) !important; }
+
+/* Columns */
+body.notion-light .task-column { background:#FFFFFF !important; border:1px solid rgba(55,53,47,.16) !important; }
+body.notion-dark  .task-column { background:#1F1F1F !important; border:1px solid rgba(255,255,255,.08) !important; }
+body.notion-light .column-header { border-bottom:1px solid rgba(55,53,47,.16) !important; }
+body.notion-dark  .column-header { border-bottom:1px solid rgba(255,255,255,.08) !important; }
+
+/* Task card */
+body.notion-light .task-card { background:#FFFFFF !important; border:1px solid rgba(55,53,47,.16) !important; }
+body.notion-dark  .task-card { background:#1F1F1F !important; border:1px solid rgba(255,255,255,.08) !important; }
+body.notion-light .task-title, body.notion-light .subtask-text { color:#2F3437 !important; }
+body.notion-dark  .task-title, body.notion-dark  .subtask-text { color:#F1F1F0 !important; }
+
+/* Time estimate input on task card */
+body.notion-light .estimate-input {
+    color: #111827 !important;
+    background: #FFFFFF !important;
+    border-color: rgba(55,53,47,0.25) !important;
+}
+body.notion-light .estimate-input::placeholder { color: #6B7280 !important; }
+
+/* Ensure time texts are dark in light theme */
+body.notion-light .task-time { color: #374151 !important; }
+body.notion-light .timer-time,
+body.notion-light .positive-time { color: #111827 !important; }
+
+/* Make estimate badge text readable in light theme */
+body.notion-light .estimate-badge {
+    color: #1F2937 !important;
+    background: rgba(59,130,246,0.12) !important;
+    border-color: rgba(59,130,246,0.35) !important;
+}
+body.notion-light .estimate-badge:hover,
+body.notion-light .estimate-badge:focus {
+    background: rgba(59,130,246,0.18) !important;
+}
+body.notion-light .estimate-placeholder {
+    border-color: rgba(148,163,184,0.6) !important;
+    background: rgba(148,163,184,0.08) !important;
+}
+
+/* ================= FOCUS MODE THEMING ================= */
+/* Container: override gradient with solid theme surfaces */
+body.notion-light .focus-mode-container { background: #FFFFFF !important; color: #111827 !important; }
+body.notion-dark  .focus-mode-container { background: #191919 !important; color: #F1F5F9 !important; }
+
+/* Timer block */
+body.notion-light .focus-timer { background: #FFFFFF !important; border: 1px solid rgba(55,53,47,0.16) !important; box-shadow: none !important; }
+body.notion-dark  .focus-timer { background: #1E1E1E !important; border: 1px solid rgba(255,255,255,0.12) !important; box-shadow: none !important; }
+
+/* Timer texts */
+body.notion-light .timer-label { color: #374151 !important; }
+body.notion-dark  .timer-label { color: #CBD5E1 !important; }
+body.notion-light .timer-time, body.notion-light .positive-time { color: #111827 !important; }
+body.notion-dark  .timer-time, body.notion-dark  .positive-time { color: #F8FAFC !important; }
+
+/* Focus tasks panel */
+body.notion-light .focus-tasks { background: #FAFAFA !important; border: 1px solid rgba(55,53,47,0.16) !important; }
+body.notion-dark  .focus-tasks { background: #1D1D1D !important; border: 1px solid rgba(255,255,255,0.12) !important; }
+body.notion-light .focus-tasks h2 { color: #111827 !important; }
+body.notion-dark  .focus-tasks h2 { color: #F9FAFB !important; }
+body.notion-light .no-tasks { color: #6B7280 !important; }
+body.notion-dark  .no-tasks { color: #94A3B8 !important; }
+
+/* Focus list items */
+body.notion-light .focus-task-item { background: #FFFFFF !important; border: 1px solid rgba(55,53,47,0.14) !important; }
+body.notion-dark  .focus-task-item { background: #232323 !important; border: 1px solid rgba(255,255,255,0.10) !important; }
+body.notion-light .focus-task-item.current-ongoing { border-color: #8B5CF6 !important; background: #F5F3FF !important; }
+body.notion-dark  .focus-task-item.current-ongoing { border-color: #8B5CF6 !important; background: rgba(139,92,246,0.08) !important; }
+
+/* Focus buttons */
+body.notion-light .timer-controls button,
+body.notion-light .done-btn { background: #F3F4F6 !important; color:#111827 !important; border:1px solid rgba(55,53,47,0.20) !important; }
+body.notion-dark .timer-controls button,
+body.notion-dark .done-btn { background: #2A2A2A !important; color:#F8FAFC !important; border:1px solid rgba(255,255,255,0.10) !important; }
+
+/* Ensure icons in buttons visible */
+body.notion-light .timer-controls button svg,
+body.notion-light .timer-controls button svg *,
+body.notion-light .focus-back svg,
+body.notion-light .focus-back svg *,
+body.notion-light .compress-btn svg,
+body.notion-light .compress-btn svg * { fill: #0F172A !important; stroke: #0F172A !important; }
+
+body.notion-dark .timer-controls button svg,
+body.notion-dark .timer-controls button svg *,
+body.notion-dark .focus-back svg,
+body.notion-dark .focus-back svg *,
+body.notion-dark .compress-btn svg,
+body.notion-dark .compress-btn svg * { fill: #F8FAFC !important; stroke: #F8FAFC !important; }
+
+/* Home page text on white background */
+body.notion-light .board-name { color: #2F3437 !important; }
+body.notion-light .last-accessed { color: #4B5563 !important; }
+body.notion-light .hover-text { color: #6B7280 !important; }
+
+/* Counters on cards (match light palette for readability) */
+body.notion-light .count.in-process {
+    background: rgba(59, 130, 246, 0.10) !important;
+    color: #2563EB !important;
+    border: 1px solid rgba(59, 130, 246, 0.20) !important;
+}
+body.notion-light .count.today {
+    background: rgba(245, 158, 11, 0.10) !important;
+    color: #D97706 !important;
+    border: 1px solid rgba(245, 158, 11, 0.20) !important;
+}
+body.notion-light .count.done {
+    background: rgba(16, 185, 129, 0.10) !important;
+    color: #059669 !important;
+    border: 1px solid rgba(16, 185, 129, 0.20) !important;
+}
+
+/* Settings modal */
+body.notion-light .settings-modal { background:#FFFFFF !important; border:1px solid rgba(55,53,47,.16) !important; }
+body.notion-dark  .settings-modal { background:#191919 !important; border:1px solid rgba(255,255,255,.08) !important; }
+body.notion-light .settings-header, body.notion-light .settings-actions { background:#FFFFFF !important; border-color: rgba(55,53,47,.16) !important; }
+body.notion-dark  .settings-header, body.notion-dark  .settings-actions { background:#191919 !important; border-color: rgba(255,255,255,.08) !important; }
+
+/* Stronger fonts in settings for readability */
+body.notion-light .settings-title,
+body.notion-dark  .settings-title { font-weight: 800 !important; }
+body.notion-light .settings-section-title,
+body.notion-dark  .settings-section-title { font-weight: 800 !important; }
+body.notion-light .settings-option-label,
+body.notion-dark  .settings-option-label { font-weight: 700 !important; }
+body.notion-light .settings-option-description { color: rgba(31,41,55,0.85) !important; }
+body.notion-dark  .settings-option-description { color: rgba(241,241,240,0.85) !important; }
+
+/* Darker text tones for light theme */
+body.notion-light .settings-title,
+body.notion-light .settings-section-title,
+body.notion-light .settings-option-label { color: #1F2937 !important; }
+body.notion-light .settings-input::placeholder { color: #6B7280 !important; }
+body.notion-light .settings-input { color: #111827 !important; }
+/* Make Pomodoro time inputs clearly outlined in light mode */
+body.notion-light .settings-input.time-input {
+    background: #FFFFFF !important;
+    color: #111827 !important;
+    border: 1px solid rgba(55,53,47,0.35) !important;
+}
+body.notion-light .settings-input.time-input:focus {
+    border-color: #2563EB !important;
+    box-shadow: 0 0 0 3px rgba(37,99,235,0.12) !important;
+}
+
+/* Buttons and dropdowns (light theme) */
+body.notion-light .settings-btn {
+    background: #F3F4F6 !important;
+    color: #1F2937 !important;
+    border: 1px solid rgba(55,53,47,0.20) !important;
+}
+body.notion-light .settings-btn.secondary {
+    background: #EFEFEF !important;
+    color: #374151 !important;
+    border-color: rgba(55,53,47,0.25) !important;
+}
+body.notion-light .settings-select {
+    color: #111827 !important;
+    background: #FFFFFF !important;
+    border-color: rgba(55,53,47,0.20) !important;
+}
+body.notion-light .settings-select option {
+    color: #111827 !important;
+    background: #FFFFFF !important;
+}
+
+/* Notion Sync dropdown - light theme restyle */
+body.notion-light .notion-dropdown { background: #FFFFFF !important; border: 1px solid rgba(55,53,47,0.16) !important; box-shadow: 0 12px 30px rgba(0,0,0,0.12) !important; }
+body.notion-light .dropdown-header { background: #F9FAFB !important; border-bottom: 1px solid rgba(55,53,47,0.12) !important; }
+body.notion-light .dropdown-header span { color: #1F2937 !important; }
+body.notion-light .sync-config-section { background: #FFFFFF !important; border-bottom: 1px solid rgba(55,53,47,0.12) !important; }
+body.notion-light .status-text { color: #111827 !important; }
+body.notion-light .linked-database { background: #ECFDF5 !important; border: 1px solid #A7F3D0 !important; }
+body.notion-light .database-label { color: #065F46 !important; }
+body.notion-light .database-name { color: #065F46 !important; }
+body.notion-light .toggle-label { color: #111827 !important; }
+
+/* Buttons inside Notion dropdown (light theme) */
+body.notion-light .sync-btn.primary { background: #3B82F6 !important; color: #FFFFFF !important; border: 1px solid #2563EB !important; }
+body.notion-light .sync-btn.primary:hover { background: #2563EB !important; }
+body.notion-light .sync-btn.secondary { background: #F3F4F6 !important; color: #1F2937 !important; border: 1px solid rgba(55,53,47,0.18) !important; }
+body.notion-light .sync-btn.secondary:hover { background: #E5E7EB !important; }
+body.notion-light .sync-btn.connect { background: #10B981 !important; color: #FFFFFF !important; border: 1px solid #059669 !important; }
+body.notion-light .sync-btn.connect:hover { background: #059669 !important; }
+
+/* Create Task Board dialog (from home.js inline styles) */
+body.notion-light .name-dialog { background: #FFFFFF !important; border: 1px solid rgba(55,53,47,0.16) !important; }
+body.notion-light .dialog-header { border-bottom: 1px solid rgba(55,53,47,0.16) !important; }
+body.notion-light .dialog-header h3 { color: #1F2937 !important; font-weight: 800 !important; }
+body.notion-light .dialog-content label { color: #111827 !important; font-weight: 600 !important; }
+body.notion-light #boardNameInput { background: #FFFFFF !important; color: #111827 !important; border: 1px solid rgba(55,53,47,0.25) !important; }
+body.notion-light #boardNameInput::placeholder { color: #6B7280 !important; }
+body.notion-light .btn-cancel { color: #1F2937 !important; border-color: rgba(55,53,47,0.25) !important; background: #F9FAFB !important; }
+body.notion-light .btn-cancel:hover { background: #F3F4F6 !important; }
+body.notion-light .btn-create { border: none !important; }
+
+/* Creation block + button visibility on light theme */
+body.notion-light #taskBoardBtn {
+    border-color: rgba(55, 53, 47, 0.38) !important;
+    color: #2F3437 !important;
+    background: transparent !important;
+}
+body.notion-light #taskBoardBtn:hover {
+    border-color: rgba(55, 53, 47, 0.6) !important;
+    color: #111827 !important;
+    background: rgba(55, 53, 47, 0.05) !important;
+}
+

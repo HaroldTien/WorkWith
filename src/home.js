@@ -1,6 +1,7 @@
 // Renderer process script
-console.log('Renderer process started');
-import { TaskBoardModal } from './components/task-board-modal.js';
+const __DEV__ = import.meta.env && import.meta.env.MODE !== 'production';
+if (__DEV__) console.log('Renderer process started');
+// Lazy-load heavy modules to reduce initial bundle size
 
 // Multiple task board instances management
 const taskBoardInstances = [];
@@ -12,15 +13,15 @@ function createNewTaskBoard() {
     cleanupOrphanedModals();
     
     // Ask user for board name
-    showBoardNameDialog((name) => {
+    showBoardNameDialog(async (name) => {
         try {
             if (name && name.trim() !== '') {
-                createTaskBoardWithName(name.trim());
+                await createTaskBoardWithName(name.trim());
             } else {
-                console.log('❌ Task board creation cancelled - no name provided');
+                if (__DEV__) console.log('❌ Task board creation cancelled - no name provided');
             }
         } catch (error) {
-            console.error('Error creating task board:', error);
+            if (__DEV__) console.error('Error creating task board:', error);
         }
     });
 }
@@ -43,8 +44,9 @@ function openTaskBoard(boardId) {
     }
 }
 
-function createTaskBoardWithName(boardName) {
+async function createTaskBoardWithName(boardName) {
     const boardId = `board_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    const { TaskBoardModal } = await import('./components/task-board-modal.js');
     const taskBoard = new TaskBoardModal(boardName);
     
     const boardInstance = {
@@ -69,7 +71,7 @@ function createTaskBoardWithName(boardName) {
     // Update display
     renderTaskBoardsList();
     
-    console.log(`✅ TaskBoard instance created: "${boardName}"`);
+    if (__DEV__) console.log(`✅ TaskBoard instance created: "${boardName}"`);
     taskBoard.show();
 }
 
@@ -241,14 +243,14 @@ function cleanupOrphanedModals() {
     // Remove any existing task-board-overlay elements that might be stuck
     const existingOverlays = document.querySelectorAll('.task-board-overlay');
     existingOverlays.forEach((overlay, index) => {
-        console.log(`🧹 Cleaning up orphaned modal ${index + 1}`);
+        if (__DEV__) console.log(`🧹 Cleaning up orphaned modal ${index + 1}`);
         overlay.remove();
     });
     
     // Remove any existing name-dialog-overlay elements that might be stuck
     const existingDialogs = document.querySelectorAll('.name-dialog-overlay');
     existingDialogs.forEach((dialog, index) => {
-        console.log(`🧹 Cleaning up orphaned dialog ${index + 1}`);
+        if (__DEV__) console.log(`🧹 Cleaning up orphaned dialog ${index + 1}`);
         dialog.remove();
     });
     
@@ -267,17 +269,18 @@ function saveAllTaskBoards() {
         }));
         
         localStorage.setItem('workwith-taskboards-list', JSON.stringify(boardsData));
-        console.log(`💾 Saved ${boardsData.length} task boards`);
+        if (__DEV__) console.log(`💾 Saved ${boardsData.length} task boards`);
     } catch (error) {
-        console.error('Failed to save task boards:', error);
+        if (__DEV__) console.error('Failed to save task boards:', error);
     }
 }
 
-function loadAllTaskBoards() {
+async function loadAllTaskBoards() {
     try {
         const savedBoards = localStorage.getItem('workwith-taskboards-list');
         if (savedBoards) {
             const boardsData = JSON.parse(savedBoards);
+            const { TaskBoardModal } = await import('./components/task-board-modal.js');
             
             boardsData.forEach(boardData => {
                 const taskBoard = new TaskBoardModal(boardData.name);
@@ -303,10 +306,10 @@ function loadAllTaskBoards() {
                 taskBoardInstances.push(boardInstance);
             });
             
-            console.log(`📁 Loaded ${boardsData.length} task boards`);
+            if (__DEV__) console.log(`📁 Loaded ${boardsData.length} task boards`);
         }
     } catch (error) {
-        console.error('Failed to load task boards:', error);
+        if (__DEV__) console.error('Failed to load task boards:', error);
     }
 }
 
@@ -459,7 +462,7 @@ function renameBoardDialog(boardId) {
             instance.name = newName.trim();
             saveAllTaskBoards();
             renderTaskBoardsList();
-            console.log(`✏️ Renamed task board to: "${newName}"`);
+            if (__DEV__) console.log(`✏️ Renamed task board to: "${newName}"`);
         }
     }, instance.name, 'Rename Task Board');
 }
@@ -480,7 +483,7 @@ function deleteTaskBoard(boardId) {
     // Update display
     renderTaskBoardsList();
     
-    console.log(`🗑️ Deleted task board: "${instance.name}"`);
+    if (__DEV__) console.log(`🗑️ Deleted task board: "${instance.name}"`);
 }
 
 function formatDate(dateString) {
@@ -521,14 +524,41 @@ window.addEventListener('taskCountUpdated', (event) => {
         // Save the updated data
         saveAllTaskBoards();
         
-        console.log(`🔄 Updated task counts for "${boardName}":`, taskCounts);
+        if (__DEV__) console.log(`🔄 Updated task counts for "${boardName}":`, taskCounts);
     }
 });
 
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('DOM loaded, WorkWith ready');
-    console.log('✅ Task Board component loaded');
+    if (__DEV__) console.log('DOM loaded, WorkWith ready');
+    if (__DEV__) console.log('✅ Task Board component loaded');
+    try {
+        // Ensure theme applied on startup
+        const savedSettings = JSON.parse(localStorage.getItem('workwith-settings') || '{}');
+        const theme = savedSettings.theme || 'system';
+        const body = document.body;
+        body.classList.remove('notion-light', 'notion-dark');
+        if (theme === 'notion-light') {
+            body.classList.add('notion-light');
+        } else if (theme === 'notion-dark') {
+            body.classList.add('notion-dark');
+        } else {
+            const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+            body.classList.add(prefersDark ? 'notion-dark' : 'notion-light');
+        }
+        // React to system theme changes when using system setting
+        if (theme === 'system' && window.matchMedia) {
+            const media = window.matchMedia('(prefers-color-scheme: dark)');
+            const handler = (e) => {
+                body.classList.remove('notion-light', 'notion-dark');
+                body.classList.add(e.matches ? 'notion-dark' : 'notion-light');
+            };
+            if (media.addEventListener) media.addEventListener('change', handler);
+            else if (media.addListener) media.addListener(handler);
+        }
+    } catch (e) {
+        if (__DEV__) console.warn('Failed to apply theme on startup', e);
+    }
     
     // Load existing task boards
     loadAllTaskBoards();

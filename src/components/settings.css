@@ -31,6 +31,8 @@
     overflow: hidden;
     transform: scale(0.9) translateY(20px);
     transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
 }
 
 .settings-overlay.show .settings-modal {
@@ -48,8 +50,8 @@
 
 .settings-title {
     color: #ffffff;
-    font-size: 24px;
-    font-weight: 600;
+    font-size: 26px;
+    font-weight: 700;
     margin: 0;
 }
 
@@ -73,8 +75,9 @@
 
 .settings-content {
     padding: 32px;
-    max-height: calc(80vh - 120px);
+    flex: 1;
     overflow-y: auto;
+    min-height: 0; /* Important for flex child to be scrollable */
 }
 
 .settings-section {
@@ -87,8 +90,8 @@
 
 .settings-section-title {
     color: #E5E7EB;
-    font-size: 18px;
-    font-weight: 600;
+    font-size: 19px;
+    font-weight: 700;
     margin: 0 0 16px 0;
     padding-bottom: 8px;
     border-bottom: 2px solid rgba(255, 255, 255, 0.1);
@@ -107,14 +110,14 @@
 }
 
 .settings-option-label {
-    color: #E5E7EB;
-    font-size: 14px;
-    font-weight: 500;
+    color: #F3F4F6;
+    font-size: 15px;
+    font-weight: 600;
 }
 
 .settings-option-description {
-    color: #9CA3AF;
-    font-size: 12px;
+    color: #CBD5E1;
+    font-size: 13px;
     margin-top: 4px;
     line-height: 1.4;
 }
@@ -237,9 +240,10 @@
     display: flex;
     gap: 12px;
     justify-content: flex-end;
-    margin-top: 32px;
-    padding-top: 24px;
+    padding: 24px 32px;
     border-top: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.02);
+    flex-shrink: 0; /* Prevent shrinking */
 }
 
 /* Scrollbar Styling */
@@ -261,6 +265,139 @@
     background: rgba(255, 255, 255, 0.3);
 }
 
+/* Notion Integration Styles */
+.settings-link {
+    color: #3B82F6;
+    text-decoration: none;
+    font-size: 12px;
+    margin-left: 4px;
+}
+
+/* Connection Status Dot */
+.connection-status-dot {
+    display: inline-block !important;
+    width: 6px !important;
+    height: 6px !important;
+    border-radius: 50% !important;
+    background-color: #9CA3AF !important;
+    margin-right: 8px !important;
+    transition: background-color 0.2s ease !important;
+    vertical-align: middle !important;
+}
+
+.connection-status-dot.connected {
+    background-color: #10B981 !important;
+    box-shadow: 0 0 4px rgba(16, 185, 129, 0.4) !important;
+}
+
+.settings-link:hover {
+    text-decoration: underline;
+}
+
+.notion-token-option,
+.notion-database-option,
+.notion-sync-option {
+    transition: all 0.3s ease;
+}
+
+.notion-sync-option .settings-option-control {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.notion-sync-option .settings-btn {
+    padding: 8px 16px;
+    font-size: 13px;
+}
+
+/* Database Selection Modal */
+.database-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.database-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    transition: all 0.2s ease;
+}
+
+.database-item:hover {
+    background: rgba(255, 255, 255, 0.06);
+    border-color: rgba(59, 130, 246, 0.3);
+    transform: translateY(-1px);
+}
+
+.database-info {
+    flex: 1;
+}
+
+.database-title {
+    color: #E5E7EB;
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 4px;
+}
+
+.database-description {
+    color: #9CA3AF;
+    font-size: 12px;
+    margin-bottom: 4px;
+}
+
+.database-meta {
+    color: #6B7280;
+    font-size: 11px;
+}
+
+.select-database-btn {
+    padding: 8px 16px;
+    font-size: 13px;
+    min-width: 80px;
+}
+
+.select-database-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* Message Styles */
+.settings-message {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    padding: 12px 20px;
+    border-radius: 6px;
+    color: white;
+    font-weight: 500;
+    z-index: 3000;
+    transform: translateX(100%);
+    transition: transform 0.3s ease;
+    max-width: 300px;
+    word-wrap: break-word;
+}
+
+.settings-message.success {
+    background: #10B981;
+}
+
+.settings-message.error {
+    background: #EF4444;
+}
+
+.settings-message.info {
+    background: #3B82F6;
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
     .settings-modal {
@@ -276,7 +413,41 @@
         padding: 24px;
     }
     
+    .settings-actions {
+        padding: 20px 24px;
+        flex-direction: column;
+    }
+    
+    .settings-actions .settings-btn {
+        width: 100%;
+        margin-bottom: 8px;
+    }
+    
+    .settings-actions .settings-btn:last-child {
+        margin-bottom: 0;
+    }
+    
     .settings-title {
         font-size: 20px;
+    }
+    
+    .notion-sync-option .settings-option-control {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .notion-sync-option .settings-btn {
+        width: 100%;
+        margin-bottom: 8px;
+    }
+    
+    .database-item {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+    }
+    
+    .select-database-btn {
+        width: 100%;
     }
 }

@@ -46,6 +46,19 @@
     transition: all 0.2s ease;
 }
 
+/* Anchor styling inside titles and subtasks */
+.task-title a,
+.subtask-text a {
+    color: #ffffff;
+    text-decoration: underline;
+}
+
+.task-title a:hover,
+.subtask-text a:hover {
+    color: #ffffff;
+    text-decoration: underline;
+}
+
 /* When hovering, truncate the title to avoid button overlap */
 .task-card:hover .task-title {
     white-space: nowrap;
